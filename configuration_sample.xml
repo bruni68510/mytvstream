@@ -1,0 +1,15 @@
+<configuration>
+  <!-- client configuration only supported type is flash/rtmp-->
+  <client type="flash" producerserver="rtmp"/>           
+  
+  <!--  backend configurations multiple -->
+  <backends>
+    <backend type="htsp">
+      <server>192.168.0.34</server>
+      <port>9982</port>
+      <httpport>9981</httpport>
+      <usernmame>cbrunner</usernmame>
+      <password>zause1gt</password>
+    </backend>    
+  </backends>
+</configuration>
