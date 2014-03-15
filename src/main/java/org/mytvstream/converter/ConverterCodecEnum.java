@@ -6,8 +6,25 @@ package org.mytvstream.converter;
  *
  */
 public enum ConverterCodecEnum {
-	H264,
-	AAC,
-	MP3,
-	FLV1;
+	H264("h264"),
+	AAC("aac"),
+	MP3("mp3"),
+	FLV1("flv");
+	
+	/**
+     * @param text
+     */
+    ConverterCodecEnum(final String text) {
+        this.text = text;
+    }
+
+    private final String text;
+
+    /* (non-Javadoc)
+     * @see java.lang.Enum#toString()
+     */
+    @Override
+    public String toString() {
+        return text;
+    }
 }

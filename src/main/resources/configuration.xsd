@@ -11,6 +11,10 @@
               <xs:extension base="xs:string">
                 <xs:attribute type="xs:string" name="type"/>
                 <xs:attribute type="xs:string" name="producerserver"/>
+                <xs:attribute type="xs:string" name="videocodec"/>
+                <xs:attribute type="xs:long" name="videobitrate"/>
+                <xs:attribute type="xs:string" name="audiocodec"/>
+                <xs:attribute type="xs:long" name="audiobitrate"/>
               </xs:extension>
             </xs:simpleContent>
           </xs:complexType>

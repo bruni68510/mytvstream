@@ -364,7 +364,8 @@ public class XugglerConverter extends Converter {
 			return "libx264";
 		}
 		if (codec.equals(ConverterCodecEnum.AAC)) {
-			return "libvo_aacenc";
+			//return "libvo_aacenc";
+			return "aac";
 		}
 		if (codec.equals(ConverterCodecEnum.MP3)) {
 			return "libmp3lame";

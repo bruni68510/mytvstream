@@ -12,6 +12,7 @@ import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.mytvstream.backend.Backend;
 import org.mytvstream.backend.Channel;
+import org.mytvstream.configuration.Configuration;
 import org.mytvstream.converter.Converter;
 import org.mytvstream.converter.ConverterCodecEnum;
 import org.mytvstream.converter.ConverterException;
@@ -35,7 +36,7 @@ public class MainWebSocketServlet extends WebSocketServlet {
 	
 	private static int CONVERTER_WAIT_TIMEOUT = 2000;
 	
-	private static String RMTP_URL = "rtmp://192.168.0.35/flvplayback";
+	//private static String RMTP_URL = "rtmp://192.168.0.35/flvplayback";
 	
 	public WebSocket doWebSocketConnect(HttpServletRequest arg0, String arg1) {
 		return new MyTvStreamSocket();
@@ -89,7 +90,8 @@ public class MainWebSocketServlet extends WebSocketServlet {
 					long backendNr = (Long)jsonObject.get("backend");
 					long bouquetNr = (Long)jsonObject.get("bouquet");
 					long channelNr = (Long)jsonObject.get("channel");					
-
+					String rtmp_url = (String)jsonObject.get("rtmpurl");
+					String rtmp_stream = (String)jsonObject.get("rtmpstream");
 				
 					Backend backend = Main.getInstance().getBackend().get((int)backendNr);
 					
@@ -97,7 +99,7 @@ public class MainWebSocketServlet extends WebSocketServlet {
 					String inputUrl = backend.getChannelUrl((int)channelNr);
 					
 					logger.debug("Channel url is " + inputUrl);					
-					String outputUrl = RMTP_URL + "/mystream"; 
+					String outputUrl = rtmp_url + "/" + rtmp_stream;
 					
 					logger.debug("Channel output url is " + outputUrl);
 					
@@ -111,19 +113,35 @@ public class MainWebSocketServlet extends WebSocketServlet {
 					);
 					
 					converter.setupReadStreams("fre");
-					converter.setupWriteStreams(ConverterCodecEnum.H264, 512000, ConverterCodecEnum.MP3, 48000);
+					
+					Configuration configuration = Main.getInstance().getConfiguration();
+					
+					ConverterCodecEnum audiocodec = ConverterCodecEnum.MP3;
+					ConverterCodecEnum videocodec = ConverterCodecEnum.H264;
+					if (configuration.getClient().getAudiocodec().equals("flv")) {
+						videocodec = ConverterCodecEnum.FLV1;
+					}
+					if (configuration.getClient().getAudiocodec().equals("aac")) {
+						videocodec = ConverterCodecEnum.AAC;
+					}
+					
+					converter.setupWriteStreams(
+						videocodec, 
+						configuration.getClient().getVideobitrate().intValue(), 
+						audiocodec, 
+						configuration.getClient().getAudiobitrate().intValue()
+					);
 					
 					converter.start();
-					
-					//connection.sendMessage("CHANNELSTARTED " + backendNr + " " + bouquetNr + " " + channelNr + " " + outputUrl);
+									
 					
 					JSONObject obj = new JSONObject();
 					obj.put("action", "CHANNELSTARTED");
 					obj.put("backend", new Long(backendNr));
 					obj.put("bouquet", new Long(bouquetNr));
 					obj.put("channel", new Long(channelNr));
-					obj.put("stream", RMTP_URL);
-					obj.put("streamname", "mystream");
+					obj.put("stream", rtmp_url);
+					obj.put("streamname", rtmp_stream);
 					connection.sendMessage(obj.toJSONString());
 					
 					return;

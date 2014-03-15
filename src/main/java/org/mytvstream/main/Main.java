@@ -27,6 +27,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.mytvstream.backend.Backend;
 import org.mytvstream.backend.BackendException;
 import org.mytvstream.backend.BackendFactory;
+import org.mytvstream.backend.BackendReconnectThread;
 import org.mytvstream.configuration.Configuration;
 import org.mytvstream.configuration.Configuration.Client;
 import org.mytvstream.converter.ConverterException;
@@ -70,11 +71,31 @@ public class Main {
 	 */
 	private ProducerServer producerServer;
 	
+	/**
+	 * Internal variable for Backend Reconnect Thread.
+	 */
+	private BackendReconnectThread backendReconnectThread;
 	
 	/**
 	 * Logger defintion
 	 */
 	private Logger logger = LoggerFactory.getLogger(Main.class);
+	
+	/**
+	 * Configuration 
+	 */
+	private Configuration configuration = null;
+	
+	
+	protected void readConfiguration(File configurationFile) throws JAXBException {
+		JAXBContext jc = JAXBContext.newInstance("org.mytvstream.configuration");
+		Unmarshaller u = jc.createUnmarshaller();
+		configuration = (Configuration)u.unmarshal( configurationFile );
+	}
+	
+	public Configuration getConfiguration() {
+		return configuration;
+	}
 	
 	/**
 	 * register Backend in the main class based on the given configuration file 
@@ -83,37 +104,40 @@ public class Main {
 	 * @throws BackendException
 	 * @throws JAXBException
 	 */
-	protected boolean registerBackend(File configurationFile) throws BackendException, JAXBException 
+	protected boolean registerBackend() throws BackendException 
 	{
-		/**
-		 * Reads the configuration file.
-		 */
-		JAXBContext jc = JAXBContext.newInstance("org.mytvstream.configuration");
-		Unmarshaller u = jc.createUnmarshaller();
-		Configuration c = (Configuration)u.unmarshal( configurationFile );
 		
 		/**
 		 * Creates the backends for that configuration.
 		 */
 		int i = 0;
-		Iterator<org.mytvstream.configuration.Configuration.Backends.Backend> iterator = c.getBackends().getBackend().iterator();
+		Iterator<org.mytvstream.configuration.Configuration.Backends.Backend> iterator = configuration.getBackends().getBackend().iterator();
 		while(iterator.hasNext()) {
 			org.mytvstream.configuration.Configuration.Backends.Backend backendConfiguration = (org.mytvstream.configuration.Configuration.Backends.Backend)iterator.next();					
 			Backend backend = BackendFactory.getInstance().getBackend(i++,backendConfiguration.getType(), backendConfiguration);
 			
+			
+			try {
+				backend.connect();	
+			}
+			catch(BackendException e) {
+				logger.error("Failed to connect to backend " + backend.getName());
+			}
 			registeredBackend.add(backend);
 		}
 		
 		return true;
 	}
 	
-	protected boolean registerClientProducer(File configurationFile) throws ProducerServerException, JAXBException {
+	/**
+	 * Register configured client register
+	 * @return
+	 * @throws ProducerServerException
+	 */
+	protected boolean registerClientProducer() throws ProducerServerException {
 	
-		JAXBContext jc = JAXBContext.newInstance("org.mytvstream.configuration");
-		Unmarshaller u = jc.createUnmarshaller();
-		Configuration c = (Configuration)u.unmarshal( configurationFile );
-		
-		Client client = c.getClient();
+				
+		Client client = configuration.getClient();
 		
 		producerServer = ProducerServerFactory.getInstance().getProducerServer(client.getProducerserver());
 		
@@ -230,9 +254,15 @@ public class Main {
 		try{
 			
 			/**
+			 * Initialize configuration
+			 * 
+			 */
+			Main.getInstance().readConfiguration(new File(args[0]));
+			
+			/**
 			 * Initialized backends
 			 */
-			Main.getInstance().registerBackend(new File(args[0]));
+			Main.getInstance().registerBackend();
 			
 		
 			/**
@@ -243,7 +273,13 @@ public class Main {
 			/**
 			 * Initialize flazr
 			 */
-			Main.getInstance().registerClientProducer(new File(args[0]));
+			Main.getInstance().registerClientProducer();
+			
+			/**
+			 * Setup reconnect Threads
+			 */
+			Main.getInstance().setupReconnectThread();
+			
 			
 			Main.getInstance().server.join();
 			
@@ -258,6 +294,19 @@ public class Main {
 			
 			Main.getInstance().shutdown();
 		}
+	}
+	
+	/**
+	 * The reconnect thread is a loop waiting one minute and reconnecting Backend with lost connections.
+	 */
+	private void setupReconnectThread() {
+		// TODO Auto-generated method stub
+		
+		backendReconnectThread = new BackendReconnectThread();
+		backendReconnectThread.setDaemon(true);
+		backendReconnectThread.start();
+		
+		
 	}
 	
 }

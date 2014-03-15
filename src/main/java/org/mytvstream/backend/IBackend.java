@@ -15,5 +15,9 @@ public interface IBackend {
 	
 	public ConverterFormatEnum getDefaultFormat();
 	
+	public void connect() throws BackendException;
+	
+	public boolean isConnected();
+	
 	
 }

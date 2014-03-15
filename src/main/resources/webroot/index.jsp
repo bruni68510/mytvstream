@@ -3,6 +3,7 @@
 <%
   pageContext.setAttribute("backends", Main.getInstance().getBackend());
   pageContext.setAttribute("server_name", request.getServerName());
+   pageContext.setAttribute("stream_name", session.getId());
 %>
 <!DOCTYPE html>
 <html> 
@@ -44,7 +45,7 @@
           
           
           $("#flash").empty();
-          /*          
+                    
           $("#flash").append(            
             '<object data="/resources/jaris.swf" id="VideoPlayer" type="application/x-shockwave-flash" height="100%" width="100%"> ' + 
             '<param value="true" name="menu"> ' +             
@@ -54,24 +55,10 @@
             ' <param value="high" name="quality"> ' +
             ' <param value="opaque" name="wmode"> ' +
             ' <param value="noScale" name="scale"> ' +
-            ' <param value="source=mystream&amp;type=video&amp;streamtype=rtmp&amp;controltype=1&amp;autostart=true&amp;controls=true&amp;darkcolor=000000&amp;brightcolor=4c4c4c&amp;controlcolor=FFFFFF&amp;hovercolor=67A8C1&amp;seekcolor=D3D3D3&amp;jsapi=true&amplive=1&amp;server=rtmp://<c:out value="${server_name}"/>/flvplayback" name="flashvars"> ' +
+            ' <param value="source=<c:out value="${stream_name}"/>&amp;type=video&amp;streamtype=rtmp&amp;controltype=1&amp;autostart=true&amp;controls=true&amp;darkcolor=000000&amp;brightcolor=4c4c4c&amp;controlcolor=FFFFFF&amp;hovercolor=67A8C1&amp;seekcolor=D3D3D3&amp;jsapi=true&amplive=1&amp;server=rtmp://<c:out value="${server_name}"/>/flvplayback" name="flashvars"> ' +
             '</object> '
            );
-           */
-          
-          $("#flash").append(            
-            '<object data="/resources/myPlayer.swf" id="VideoPlayer" type="application/x-shockwave-flash" height="100%" width="100%"> ' + 
-            '<param value="true" name="menu"> ' +             
-            '<param value="true" name="allowFullscreen"> ' +
-            '<param value="always" name="allowScriptAccess"> ' +
-            ' <param value="#000000" name="bgcolor"> ' +
-            ' <param value="high" name="quality"> ' +
-            ' <param value="opaque" name="wmode"> ' +
-            ' <param value="noScale" name="scale"> ' +
-            ' <param value="skin=/resources/skin.swf&stream=rtmp://192.168.0.35/flvplayback&streamname=mystream&live=1" name="flashvars"> ' +
-            '</object> '
-           );
-          
+                     
         }
       };
     
@@ -86,7 +73,9 @@
             format : "FLV",
             backend : data.node.data.backend,
             bouquet : data.node.data.bouquet,
-            channel : data.node.data.channel 
+            channel : data.node.data.channel,
+            rtmpurl : 'rtmp://<c:out value="${server_name}"/>/flvplayback',
+            rtmpstream : '<c:out value="${stream_name}"/>'  
           };
           
           ws.send($.toJSON(myObj)); 
@@ -155,7 +144,7 @@
           </object>
           
        </div>    
-     
+     </div>
     </div>
   </div>
  </div>

@@ -1,5 +1,6 @@
 package org.mytvstream.backend;
 
+import java.net.ConnectException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -23,6 +24,11 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	 */
 	private HTSConnection connection;
 	private String webroot = new String();
+	private String username;
+	private String password;
+	private String server;
+	private short port;
+	private short httpport;
 	
 	/**
 	 * Class logger
@@ -45,26 +51,41 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	{
 	
 		this.id = id;
+		
+		bouquets.add(new Bouquet(0,bouquetName,0));
+		
+		server = backendConfiguration.getServer();
+		port = backendConfiguration.getPort();
+		username = backendConfiguration.getUsernmame();
+		password = backendConfiguration.getPassword();
+		httpport = backendConfiguration.getHttpport();
+		name = "HTS Backend " + backendConfiguration.getServer();
+	}
+
+	public void connect() throws BackendException {
+		
 		connection = new HTSConnection(this, HTSBackend.class.getPackage().getName(), HTSBackend.class.getName());		
 		connection.setDaemon(true);
-		connection.open(backendConfiguration.getServer(), backendConfiguration.getPort());	
-		connection.authenticate(backendConfiguration.getUsernmame(), backendConfiguration.getPassword());
+		connection.open(server, port);
 		
-		this.name = "HTS Backend " + backendConfiguration.getServer();
+		if (connection == null || !connection.isConnected()) {		
+			throw new BackendException("Failed to connect to backend");			
+		}
 		
+		connection.authenticate(username, password);
+				
 		webroot = connection.getWebRoot();
 		
 		if (webroot == null) {
 			webroot = "http://" + 
-					backendConfiguration.getUsernmame() + ":" +
-					backendConfiguration.getPassword() + "@" +
-					backendConfiguration.getServer() + ":" +
-					backendConfiguration.getHttpport();
+					username + ":" +
+					password + "@" +
+					server + ":" +
+					httpport;
 		}
 		
-		bouquets.add(new Bouquet(0,bouquetName,0));
 	}
-
+	
 	/**
 	 * The HTS backend has delivered an asynchronous message
 	 * See HTSP definition at https://tvheadend.org/projects/tvheadend/wiki/Htsp for the list of possible messages
@@ -111,12 +132,19 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 		
 		if (errorCode == HTSConnection.CONNECTION_LOST_ERROR)		
 			logger.error("Connection lost to hts backend ");
-		if (errorCode == HTSConnection.CONNECTION_REFUSED_ERROR)
+		if (errorCode == HTSConnection.CONNECTION_REFUSED_ERROR) {
 			logger.error("hts backend refused to connect");
+		}
 		if (errorCode == HTSConnection.HTS_AUTH_ERROR) 
 			logger.error("hts backend refused the credentials supplied");
 		if (errorCode == HTSConnection.HTS_MESSAGE_ERROR) 
 			logger.error("Got an unexcepted error from hts server");
+		
+		// remove the current connection the reconnect worker may recreate the connection later
+		if (connection != null && connection.isConnected()) {
+			connection.close();
+		}
+		connection = null;
 	}
 
 	/**
@@ -124,6 +152,13 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	 */
 	public void onError(Exception ex) {
 		logger.error("Got an exception from hts backend",ex);
+		
+		// remove the current connection the reconnect worker may recreate the connection later
+		if (connection != null && connection.isConnected()) {
+			connection.close();
+		}
+		connection = null;
+
 	}
 
 	
@@ -172,7 +207,17 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
             }
         }
 	}
+	
+	/**
+	 * Rely on connection in isConnected function
+	 */
+	public boolean isConnected() {
+		return (connection != null && connection.isAuthenticated());
+	}
 
+	/**
+	 * The default format for the input file that we get from TV Headend.
+	 */
 	public ConverterFormatEnum getDefaultFormat() {
 		// TODO Auto-generated method stub
 		return ConverterFormatEnum.MKV;

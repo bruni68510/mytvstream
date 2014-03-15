@@ -10,6 +10,7 @@
 
  <logger name="com.flazr" level="INFO"/>
  <logger name="com.flazr.rtmp.RtmpDecoder" level="INFO" />
+ <logger name="com.flazr.rtmp.RtmpEncoder" level="INFO" />
  <logger name="com.flazr.amf.Amf0Value" level="INFO" />
  <logger name="org.mytvstream" level="DEBUG"/>
  <logger name="com.xuggle" level="INFO"/>

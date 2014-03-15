@@ -9,7 +9,7 @@
   <properties>
   <jetty-version>8.1.14.v20131031</jetty-version>
   <xuggle-version>5.4</xuggle-version>
-  <flazr-version>0.7-snv20100505</flazr-version>
+  <flazr-version>0.7</flazr-version>
   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -21,8 +21,11 @@
   <repository>
        <id>jboss</id>
        <url>http://repository.jboss.com/maven2</url>
-   </repository>
-  
+  </repository>
+  <repository>
+       <id>myrepo</id>
+       <url>file:///home/cbrunner/workspace/flazr/repo</url>
+   </repository> 
  </repositories>
  
  <pluginRepositories>
@@ -70,11 +73,13 @@
       <artifactId>jetty-webapp</artifactId>
       <version>${jetty-version}</version>
     </dependency>
+    
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-websocket</artifactId>
       <version>${jetty-version}</version>
     </dependency>
+    
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-jsp</artifactId>
@@ -88,8 +93,8 @@
       </exclusions>
     </dependency>
 	  
-    <!-- dependency>
-		  <groupId>net.sourceforge.openutils</groupId>
+    <dependency>
+		  <groupId>com.flazr</groupId>
 		  <artifactId>flazr</artifactId>
 		  <version>${flazr-version}</version>			
 			<exclusions>
@@ -97,8 +102,8 @@
 	        <groupId>org.slf4j</groupId>
 	        <artifactId>slf4j-log4j12</artifactId>
 	      </exclusion>
-      </exclusions>
-    </dependency!-->
+      </exclusions>            
+    </dependency>
     
     <dependency>
 		  <groupId>com.googlecode.json-simple</groupId>
@@ -123,6 +128,7 @@
           </nonFilteredFileExtensions>
         </configuration>
       </plugin>
+      
       <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>

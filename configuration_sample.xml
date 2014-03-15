@@ -1,6 +1,6 @@
 <configuration>
   <!-- client configuration only supported type is flash/rtmp-->
-  <client type="flash" producerserver="rtmp"/>           
+  <client type="flash" producerserver="rtmp" audiocodec="mp3" audiobitrate="128000" videocodec="h264" videobitrate="512000"/>            
   
   <!--  backend configurations multiple -->
   <backends>
@@ -8,8 +8,8 @@
       <server>192.168.0.34</server>
       <port>9982</port>
       <httpport>9981</httpport>
-      <usernmame>cbrunner</usernmame>
-      <password>zause1gt</password>
+      <usernmame>hts</usernmame>
+      <password>hts</password>
     </backend>    
   </backends>
 </configuration>

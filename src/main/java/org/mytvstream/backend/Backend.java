@@ -10,7 +10,11 @@ public abstract class Backend implements IBackend {
 	// The name of the backend
 	protected String name = "Default backend";
 	
+	// the id of the backend
 	protected int id = 0; 
+	
+	// is the backend connected
+	protected boolean connected = false;
 	
 	/**
 	 * List of channels for this backend
@@ -52,4 +56,12 @@ public abstract class Backend implements IBackend {
 	public int getID() {
 		return id;
 	}
+	
+	/**
+	 * Is connected
+	 */
+	public boolean isConnected() {
+		return connected;
+	}
+	
 }
