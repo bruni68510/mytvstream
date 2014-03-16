@@ -2,5 +2,6 @@ package org.mytvstream.converter;
 
 public enum ConverterFormatEnum {
 	FLV,
-	MKV;
+	MKV,
+	HLS;
 }

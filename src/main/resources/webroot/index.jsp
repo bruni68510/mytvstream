@@ -24,10 +24,28 @@
     <script src="/jstree/jstree.min.js"></script>    
     <script src="/javascript/page.js"></script>
     
-        <script>
+    
+    <script>
     
     
     $(function () {
+    
+      $.msg = function(text, style)
+      {
+        style = style || 'notice';           //<== default style if it's not set
+    
+        //create message and show it
+        $('<div>')
+          .attr('class', style)
+          .html(text)
+          .fadeIn('fast')
+          .insertBefore($('#flashcontent'))  //<== wherever you want it to show
+          .animate({opacity: 1.0}, 2500)     //<== wait 3 sec before fading ou
+          .fadeOut('slow', function()
+          {
+            $(this).remove();
+          });
+      };
     
       var ws = $.gracefulWebSocket('ws://<c:out value="${server_name}"/>:8085/events/');
      
@@ -38,15 +56,18 @@
         var obj = jQuery.parseJSON( messageFromServer );
         
         if (obj.action == "CHANNELFAILED") {
-          alert("Failed to tune channel" + obj.error);
+          $.msg("Failed to tune channel:" + obj.error, "error");
+        }
+        
+        if (obj.action == "CHANNELMESSAGE") {
+          $.msg(obj.message);
         }
         
         if (obj.action == "CHANNELSTARTED") {
           
+          $("#flashcontent").empty();
           
-          $("#flash").empty();
-                    
-          $("#flash").append(            
+          $("#flashcontent").append(            
             '<object data="/resources/jaris.swf" id="VideoPlayer" type="application/x-shockwave-flash" height="100%" width="100%"> ' + 
             '<param value="true" name="menu"> ' +             
             '<param value="true" name="allowFullscreen"> ' +
@@ -58,7 +79,7 @@
             ' <param value="source=<c:out value="${stream_name}"/>&amp;type=video&amp;streamtype=rtmp&amp;controltype=1&amp;autostart=true&amp;controls=true&amp;darkcolor=000000&amp;brightcolor=4c4c4c&amp;controlcolor=FFFFFF&amp;hovercolor=67A8C1&amp;seekcolor=D3D3D3&amp;jsapi=true&amplive=1&amp;server=rtmp://<c:out value="${server_name}"/>/flvplayback" name="flashvars"> ' +
             '</object> '
            );
-                     
+                        
         }
       };
     
@@ -78,7 +99,9 @@
             rtmpstream : '<c:out value="${stream_name}"/>'  
           };
           
-          ws.send($.toJSON(myObj)); 
+          ws.send($.toJSON(myObj));
+          
+          $("#flashcontent").empty(); 
         }
       });
       
@@ -131,7 +154,8 @@
        </div>
        
        <div class="col-md-9 fill" id="flash">
-          <object data="/resources/jaris.swf" 
+          <div id="flashcontent" class="fill" />
+            <object data="/resources/jaris.swf" 
             id="VideoPlayer" type="application/x-shockwave-flash" height="100%" width="100%">
             <param value="true" name="menu">
             <param value="noScale" name="scale">
@@ -142,7 +166,7 @@
             <param value="opaque" name="wmode">
             <param value="controls=false&amp;darkcolor=000000&amp;brightcolor=4c4c4c&amp;controlcolor=FFFFFF&amp;hovercolor=67A8C1&amp;seekcolor=D3D3D3" name="flashvars"> 
           </object>
-          
+          </div>
        </div>    
      </div>
     </div>

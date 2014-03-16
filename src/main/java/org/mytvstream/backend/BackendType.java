@@ -1,7 +1,8 @@
 package org.mytvstream.backend;
 
 public enum BackendType {
-	HTS("htsp");
+	HTS("htsp"),
+	EYETV("eyetv");
 	
 	protected String type;
 	

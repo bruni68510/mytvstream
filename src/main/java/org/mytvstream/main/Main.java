@@ -185,11 +185,9 @@ public class Main {
         context.setContextPath("/");
         context.setAttribute("javax.servlet.context.tempdir",scratchDir);
         context.setResourceBase(baseUri.toASCIIString());
+        context.getSessionHandler().getSessionManager().setMaxInactiveInterval(60);
         server.setHandler(context);
         
-        // Add Application Servlets
-        //context.addServlet(DateServlet.class,"/date/");
-
         // Set Classloader of Context to be sane (needed for JSTL)
         // JSP requires a non-System classloader, this simply wraps the
         // embedded System classloader in a way that makes it suitable

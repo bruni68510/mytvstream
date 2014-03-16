@@ -24,11 +24,6 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	 */
 	private HTSConnection connection;
 	private String webroot = new String();
-	private String username;
-	private String password;
-	private String server;
-	private short port;
-	private short httpport;
 	
 	/**
 	 * Class logger
@@ -50,15 +45,9 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	public HTSBackend(int id, org.mytvstream.configuration.Configuration.Backends.Backend backendConfiguration) 
 	{
 	
-		this.id = id;
+		super(id,backendConfiguration);
 		
-		bouquets.add(new Bouquet(0,bouquetName,0));
-		
-		server = backendConfiguration.getServer();
-		port = backendConfiguration.getPort();
-		username = backendConfiguration.getUsernmame();
-		password = backendConfiguration.getPassword();
-		httpport = backendConfiguration.getHttpport();
+		bouquets.add(new Bouquet(0,bouquetName,0));		
 		name = "HTS Backend " + backendConfiguration.getServer();
 	}
 
@@ -161,15 +150,21 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 
 	}
 
-	
+	/**
+	 * Don't need to check for the backend to tune the channel ...
+	 */
+	public boolean tuneChannel(BackendListener listener, String channelURL) {
+		return true;	
+	}
 	
 	/**
 	 * Calling the getTicket method of the HTSConnection for current channel.
 	 * The call is synchronous and will wait 5 second to get the response from the server.
 	 * @param channel
 	 * @return
+	 * @throws BackendException 
 	 */
-	public String getChannelUrl(final int channelID) {
+	public String getChannelUrl(final int channelID) throws BackendException {
 		
 		final HTSMessage message = new HTSMessage();
 		//final int channelID = channel.getID();
@@ -203,7 +198,7 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
                 message.wait(5000);
                 return responseMessage.toString();
             } catch (InterruptedException ex) {
-            	return "";
+            	throw new BackendException("Failed to retrieve channel from backend");
             }
         }
 	}

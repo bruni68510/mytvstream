@@ -1,5 +1,12 @@
 package org.mytvstream.converter;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+
 import com.xuggle.xuggler.ICodec.Type;
 
 import org.slf4j.Logger;
@@ -55,7 +62,27 @@ public class XugglerConverter extends Converter {
 	
 	static final Logger logger = LoggerFactory.getLogger(XugglerConverter.class);
 	
-	
+	/**
+	 * Print informations about xuggler
+	 */
+	static {
+		
+		ByteArrayOutputStream os = new ByteArrayOutputStream();
+		PrintStream ps = new PrintStream(os);
+		
+		Configuration.printSupportedContainerFormats(ps);
+		String output;
+		try {
+			output = os.toString("UTF8");
+			logger.debug(output);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
 	
 	/**
 	 * Open media let's set the url of the reading media
@@ -66,13 +93,20 @@ public class XugglerConverter extends Converter {
 	{
 		icontainer = IContainer.make();
 		icontainerFormat = IContainerFormat.make();
-		icontainerFormat.setInputFormat(getConverterFormat(inputFormat));
+		int i = icontainerFormat.setInputFormat(getConverterFormat(inputFormat));
 		
-		int i = icontainer.open(mediaFile, IContainer.Type.READ, icontainerFormat);
 		
 		if (i<0) {
+			throw new ConverterException("failed to set input format " + inputFormat);
+		}
+		
+		i = icontainer.open(mediaFile, IContainer.Type.READ, icontainerFormat);
+		
+		if (i < 0) {
 			throw new ConverterException("could not open input media");
 		}
+		
+		
 		
 		logger.debug(icontainer.toString());
 		//System.out.println(icontainer.toString());
@@ -122,8 +156,8 @@ public class XugglerConverter extends Converter {
 				{
 					iAudioStreamIndex = i;
 				}
-				if (stream.getLanguage().equals(audioLanguage)) {
-					iAudioStreamIndex = i;
+				if (stream.getLanguage() != null && stream.getLanguage().equals(audioLanguage)) {
+						iAudioStreamIndex = i;
 				}				
 			}			
 		}
@@ -381,7 +415,9 @@ public class XugglerConverter extends Converter {
 		if (format.equals(ConverterFormatEnum.FLV))
 			return "flv";
 		if (format.equals(ConverterFormatEnum.MKV))
-			return "mkv";
+			return "matroska";
+		if (format.equals(ConverterFormatEnum.HLS))
+			return "applehttp";
 		return "";
 	}
 	

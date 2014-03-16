@@ -50,6 +50,9 @@ public class BackendFactory {
 		if (type.equals(BackendType.HTS.type)) {
 			return new HTSBackend(id,backendConfiguration);
 		}
+		if (type.equals(BackendType.EYETV.type)) {
+			return new EyeTvBackend(id,backendConfiguration);
+		}
 	    
 	    throw new BackendException("Can't find suitable backend");
 	}

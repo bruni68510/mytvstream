@@ -2,6 +2,7 @@ package org.mytvstream.backend;
 
 import java.util.ArrayList;
 
+import org.tvheadend.tvhguide.htsp.HTSConnection;
 import org.tvheadend.tvhguide.htsp.HTSMessage;
 import org.tvheadend.tvhguide.htsp.HTSResponseHandler;
 
@@ -15,6 +16,15 @@ public abstract class Backend implements IBackend {
 	
 	// is the backend connected
 	protected boolean connected = false;
+	
+	/**
+	 * Backend connection
+	 */	
+	protected String username;
+	protected String password;
+	protected String server;
+	protected short port;
+	protected short httpport;
 	
 	/**
 	 * List of channels for this backend
@@ -34,12 +44,20 @@ public abstract class Backend implements IBackend {
 	}
 	
 	/**
-	 * Calling the getTicket method of the HTSConnection for current channel.
+	 * Not implemented on generic backend
 	 * @param connection
 	 * @return
 	 */
-	public String getChannelUrl(int channelID) {		
-		return "";
+	public String getChannelUrl(int channelID) throws BackendException {		
+		throw new BackendException("Not available");
+	}
+	
+	/**
+	 * Not implemented on generic backend
+	 * 
+	 */
+	public boolean tuneChannel(String channelURL) throws BackendException {
+		throw new BackendException("Not available");
 	}
 		
 	/**
@@ -64,4 +82,17 @@ public abstract class Backend implements IBackend {
 		return connected;
 	}
 	
+	/**
+	 * Default constructor of backend, stores configuration into local variables.
+	 * @param id
+	 * @param backendConfiguration
+	 */
+	public Backend(int id, org.mytvstream.configuration.Configuration.Backends.Backend backendConfiguration) {
+		this.id = id;
+		server = backendConfiguration.getServer();
+		port = backendConfiguration.getPort();
+		username = backendConfiguration.getUsernmame();
+		password = backendConfiguration.getPassword();
+		httpport = backendConfiguration.getHttpport();
+	}
 }

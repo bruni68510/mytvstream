@@ -17,6 +17,7 @@ public class Channel implements Comparable<Channel> {
 	protected String name;
 	protected int id;
 	protected int number;
+	protected String serviceID;
 	
 	private Logger logger = LoggerFactory.getLogger(Channel.class);
 	
@@ -33,6 +34,13 @@ public class Channel implements Comparable<Channel> {
 		this.number = number;		
 	}
 	
+	
+	/**
+	 * Setters
+	 */
+	public void setServiceID(String serviceID) {
+		this.serviceID = serviceID;
+	}
 	
 	/**
 	 * Getters

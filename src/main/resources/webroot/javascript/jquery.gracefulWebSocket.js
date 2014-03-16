@@ -62,6 +62,8 @@
 			 */
 			function FallbackSocket() {
 				
+				alert("fallback socket");
+				
 				// WebSocket interface constants
 				const CONNECTING = 0;
 				const OPEN = 1;

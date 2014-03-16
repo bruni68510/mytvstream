@@ -1,13 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.bruninet</groupId>
+  <groupId>org.mytvstream</groupId>
   <artifactId>mytvstream</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>My TV Stream</name>
   <description>Get your backend streamed on internet</description>
 
   <properties>
+  <!--  jetty-version>8.1.14.v20131031</jetty-version!-->
   <jetty-version>8.1.14.v20131031</jetty-version>
+  <jetty-websocket-version>8.1.14.v20131031</jetty-websocket-version>
   <xuggle-version>5.4</xuggle-version>
   <flazr-version>0.7</flazr-version>
   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,8 +25,8 @@
        <url>http://repository.jboss.com/maven2</url>
   </repository>
   <repository>
-       <id>myrepo</id>
-       <url>file:///home/cbrunner/workspace/flazr/repo</url>
+       <id>flazr-repo</id>
+       <url>https://raw.github.com/bruni68510/flazr/master/repo</url>
    </repository> 
  </repositories>
  
@@ -48,12 +50,12 @@
           <groupId>commons-httpclient</groupId>
           <artifactId>commons-httpclient</artifactId>
           <version>3.1</version>
-          <exclusions>
+          <!-- exclusions>
               <exclusion>
                   <groupId>commons-logging</groupId>
                   <artifactId>commons-logging</artifactId>
               </exclusion>                
-          </exclusions>            
+          </exclusions!-->            
       </dependency>
       <dependency>
           <groupId>commons-cli</groupId>
@@ -77,7 +79,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-websocket</artifactId>
-      <version>${jetty-version}</version>
+      <version>${jetty-websocket-version}</version>
     </dependency>
     
     <dependency>

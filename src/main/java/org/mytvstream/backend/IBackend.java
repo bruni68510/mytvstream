@@ -11,7 +11,9 @@ public interface IBackend {
 	
 	public ArrayList<Channel> getChannels(Bouquet bouquet);
 	
-	public String getChannelUrl(int channelID);
+	public String getChannelUrl(int channelID) throws BackendException;
+	
+	public boolean tuneChannel(BackendListener listener, String channel) throws BackendException;
 	
 	public ConverterFormatEnum getDefaultFormat();
 	

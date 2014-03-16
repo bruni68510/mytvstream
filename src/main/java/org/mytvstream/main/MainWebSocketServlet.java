@@ -9,8 +9,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.websocket.WebSocket;
+import org.eclipse.jetty.websocket.WebSocketFactory;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.mytvstream.backend.Backend;
+import org.mytvstream.backend.BackendException;
+import org.mytvstream.backend.BackendListener;
 import org.mytvstream.backend.Channel;
 import org.mytvstream.configuration.Configuration;
 import org.mytvstream.converter.Converter;
@@ -37,6 +40,8 @@ public class MainWebSocketServlet extends WebSocketServlet {
 	private static int CONVERTER_WAIT_TIMEOUT = 2000;
 	
 	//private static String RMTP_URL = "rtmp://192.168.0.35/flvplayback";
+	
+	
 	
 	public WebSocket doWebSocketConnect(HttpServletRequest arg0, String arg1) {
 		return new MyTvStreamSocket();
@@ -82,6 +87,7 @@ public class MainWebSocketServlet extends WebSocketServlet {
 			
 				String action = (String)jsonObject.get("action");
 				
+				
 				if (action.equals("CHANNELSTART")) {
 					
 					logger.debug("Got CHANNELSTART message");
@@ -97,6 +103,24 @@ public class MainWebSocketServlet extends WebSocketServlet {
 					
 					//Channel channel = backend.getBouquets().get((int)bouquetNr).getChannels().get((int)channelNr);
 					String inputUrl = backend.getChannelUrl((int)channelNr);
+					
+					backend.tuneChannel(new BackendListener() {
+						@Override
+						public void onMessage(String message) {
+							// TODO Auto-generated method stub
+							JSONObject obj = new JSONObject();
+							obj.put("action", "CHANNELMESSAGE");
+							obj.put("message", message);
+							try {
+								connection.sendMessage(obj.toJSONString());
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								logger.error("Failed to send message");
+							}
+						}
+						
+					}, inputUrl);
+										
 					
 					logger.debug("Channel url is " + inputUrl);					
 					String outputUrl = rtmp_url + "/" + rtmp_stream;
@@ -133,8 +157,7 @@ public class MainWebSocketServlet extends WebSocketServlet {
 					);
 					
 					converter.start();
-									
-					
+														
 					JSONObject obj = new JSONObject();
 					obj.put("action", "CHANNELSTARTED");
 					obj.put("backend", new Long(backendNr));
@@ -161,6 +184,9 @@ public class MainWebSocketServlet extends WebSocketServlet {
 				closeConverter();
 				return;
 			}
+			catch (BackendException e) {
+				error = e.getMessage();
+			}
 			
 			try{
 				JSONObject obj = new JSONObject();
@@ -181,7 +207,7 @@ public class MainWebSocketServlet extends WebSocketServlet {
 		}		
 		
 		public void onClose(int closeCode, String message) {
-			
+			logger.debug("Closing websocket connection");
 			closeConverter();			
 		}
 
