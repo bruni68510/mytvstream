@@ -19,6 +19,9 @@ public class BackendReconnectThread extends Thread {
 	
 	public void run() {
 		
+		final String orgName = Thread.currentThread().getName();
+        Thread.currentThread().setName(orgName + " - Reconnect Thread");
+		
 		while (!interrupted) {
 		
 			Iterator<Backend> it = Main.getInstance().getBackend().iterator();

@@ -22,8 +22,8 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	/**
 	 * Backend connection
 	 */
-	private HTSConnection connection;
-	private String webroot = new String();
+	protected HTSConnection connection;
+	protected String webroot = new String();
 	
 	/**
 	 * Class logger
@@ -51,9 +51,18 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 		name = "HTS Backend " + backendConfiguration.getServer();
 	}
 
-	public void connect() throws BackendException {
+	/**
+	 * Copy constructor
+	 * @param backend
+	 */
+	protected HTSBackend() {
+		// TODO Auto-generated constructor stub
+		super();
+	}
+
+	protected void connect(HTSConnectionListener listener) throws BackendException {
 		
-		connection = new HTSConnection(this, HTSBackend.class.getPackage().getName(), HTSBackend.class.getName());		
+		connection = new HTSConnection(listener, HTSBackend.class.getPackage().getName(), HTSBackend.class.getName());		
 		connection.setDaemon(true);
 		connection.open(server, port);
 		
@@ -75,15 +84,22 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 		
 	}
 	
+	public void connect() throws BackendException {
+		connect(this);
+	}
+	
 	/**
 	 * The HTS backend has delivered an asynchronous message
 	 * See HTSP definition at https://tvheadend.org/projects/tvheadend/wiki/Htsp for the list of possible messages
 	 */
 	public void onMessage(HTSMessage response) {
 		if (response.getMethod().equals("channelAdd")) {
-			//logger.debug("Adding channel " + response.);
+			logger.debug("Adding channel " + response);
 			
 			long channelID = response.getLong("channelId");
+			long eventID = response.getLong("eventId", -1);
+			
+			// add channel to channel list
 	        String ChannelName = response.getString("channelName", null);
 	        int channelNumber = response.getInt("channelNumber", 0);
 	        
@@ -92,13 +108,25 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	        }
 	        
 	        Channel newChannel = new Channel(ChannelName, (int)channelID, channelNumber);
-	        //channels.add(newChannel);
+	        
 	        bouquets.get(0).channels.add(newChannel);
 	        Collections.sort(bouquets.get(0).channels);
+	        	        
+			if (eventID != -1) {
+				for (Iterator<Channel> it = bouquets.get(0).channels.iterator(); it.hasNext();){
+					Channel channel = it.next();
+					if (channel.getID() == channelID){
+						EPGEvent event = new EPGEvent(eventID,channel);
+						getEPGDetails(event);
+						channel.setEPGEvent(event); 
+					}
+				}			
+			}
+			
 		}
 		else if (response.getMethod().equals("channelDelete")) {
 			long channelID = response.getLong("channelId");
-			
+						
 			//channels.remove(new Channel("",(int)channelID,0));
 			
 			for (Iterator<Channel> it = bouquets.get(0).channels.iterator(); it.hasNext();){
@@ -108,6 +136,23 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 			    }
 			}
 		}
+		
+		else if (response.getMethod().equals("channelUpdate")) {
+			long channelID = response.getLong("channelId");
+			long eventID = response.getLong("eventId", -1);			
+						
+			if (eventID != -1) {
+				for (Iterator<Channel> it = bouquets.get(0).channels.iterator(); it.hasNext();){
+					Channel channel = it.next();
+					if (channel.getID() == channelID){
+						EPGEvent event = new EPGEvent(eventID,channel);
+						getEPGDetails(event);
+						channel.setEPGEvent(event); 
+					}
+				}			
+			}
+		}
+		
 		else {
 			logger.debug("Got message " + response);
 		}
@@ -153,7 +198,8 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	/**
 	 * Don't need to check for the backend to tune the channel ...
 	 */
-	public boolean tuneChannel(BackendListener listener, String channelURL) {
+	public boolean tuneChannel(BackendListener listener, Channel channel) {
+		listener.onMessage(name + " : " + "Channel tuned");
 		return true;	
 	}
 	
@@ -164,12 +210,13 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 	 * @return
 	 * @throws BackendException 
 	 */
-	public String getChannelUrl(final int channelID) throws BackendException {
+	public String getChannelUrl(BackendListener listener, Channel channel) throws BackendException {
 		
-		final HTSMessage message = new HTSMessage();
+		final HTSMessage message = new HTSMessage();		
+		
 		//final int channelID = channel.getID();
 		message.setMethod("getTicket");
-		message.putField("channelId", channelID);
+		message.putField("channelId", channel.getID());
 		
 		final StringBuffer responseMessage = new StringBuffer();
 		
@@ -195,7 +242,7 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
         
         synchronized (message) {
             try {
-                message.wait(5000);
+                message.wait(500);
                 return responseMessage.toString();
             } catch (InterruptedException ex) {
             	throw new BackendException("Failed to retrieve channel from backend");
@@ -203,6 +250,7 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
         }
 	}
 	
+		
 	/**
 	 * Rely on connection in isConnected function
 	 */
@@ -217,4 +265,45 @@ public class HTSBackend extends Backend implements HTSConnectionListener, IBacke
 		// TODO Auto-generated method stub
 		return ConverterFormatEnum.MKV;
 	}
+
+	/**
+	 * Getter for package classes.
+	 * @return
+	 */
+	HTSConnection getConnection() {
+		// TODO Auto-generated method stub
+		return connection;
+	}
+
+	protected void getEPGDetails(final EPGEvent event) {
+		
+		final HTSMessage message = new HTSMessage();		
+		
+		logger.debug("Getting EPG Detail for event " + event.getEventId() + " from channel " + event.getChannel().name);
+		message.setMethod("getEvent");		
+		message.putField("eventId", event.getEventId());
+		
+		final StringBuffer responseMessage = new StringBuffer();
+		
+        HTSResponseHandler responseHandler = new HTSResponseHandler() {
+
+            public void handleResponse(HTSMessage response) {
+                
+            	logger.debug("Got epg details for channel " + event.getChannel().name);
+            	event.withStart(response.getLong("start",0))
+            		 .withStop(response.getLong("stop",0))
+            		 .withTitle(response.getString("title",""))
+            		 .withDescription(response.getString("description",""))
+            		 .withSummary(response.getString("summary",""));
+            	 
+            	event.getChannel().setEPGEvent(event);
+            }
+        };
+
+        connection.sendMessage(message, responseHandler);
+                
+	}
+	
+	
+	
 }

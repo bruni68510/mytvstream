@@ -1,13 +1,5 @@
 package org.mytvstream.backend;
 
-
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-//import org.apache.commons.httpclient.URI;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,6 +9,17 @@ import java.net.URI;
 import java.util.Iterator;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.params.HttpParams;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -48,7 +51,7 @@ public class EyeTvBackend extends Backend {
 	/**
 	 * httpclient
 	 */
-	HttpClient client = new HttpClient();
+	CloseableHttpClient client;
 
 	@Override	
 	public ConverterFormatEnum getDefaultFormat() {
@@ -64,21 +67,26 @@ public class EyeTvBackend extends Backend {
 		// TODO Auto-generated method stub
 		if (isConnected()) {
 			
-			// get the channels			
-			GetMethod method = new GetMethod("http://" + server + ":" + port + "/live/channels");
+			// get the channels
 			
+						
 			try {
 			
-				// Execute the method.
-				int statusCode = client.executeMethod(method);
+				HttpGet httpget = new HttpGet("http://" + server + ":" + port + "/live/channels");
 			
-				if (statusCode != HttpStatus.SC_OK) {
-					logger.error("Failed to get channels from Eyetv backend " + this.name);
-					return;
+				CloseableHttpResponse response = client.execute(httpget);				
+				
+				if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+					throw new BackendException("Failed to connect to backend");
 				}
-			
-				String responseBody = getResponseBody(method);		 
-				Object obj = parser.parse(responseBody);
+				
+				BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+				
+				response.close();
+				
+				Object obj = parser.parse(reader);
+				
+				
 				JSONObject jsonObject = (JSONObject) obj;
 				
 				int i = 0;
@@ -102,10 +110,6 @@ public class EyeTvBackend extends Backend {
 				}
 				
 
-			} catch (HttpException e) {
-				// TODO Auto-generated catch block
-				logger.error("Eyetv failed to get channels :" + e.getMessage());
-				throw new BackendException("Eyetv failed to get channels");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				logger.error("Eyetv failed to get channels :" + e.getMessage());
@@ -115,10 +119,7 @@ public class EyeTvBackend extends Backend {
 				logger.error("Eyetv failed to get channels :" + e.getMessage());
 				throw new BackendException("Eyetv failed to get channels");
 			}
-			finally {
-				// Release the connection.
-				method.releaseConnection();
-			}
+			
 			
 		}
 		else {
@@ -132,29 +133,29 @@ public class EyeTvBackend extends Backend {
 	 * The reponse is gzip encoded, need to unzip first.
 	 */	
 	@Override
-	public boolean isConnected() {
-
-		GetMethod method = new GetMethod("http://" + server + ":" + port + "/live/status/0");
+	public boolean isConnected() {		
 		
 		try {
 			// Execute the method.
-			int statusCode = client.executeMethod(method);
-
-			if (statusCode != HttpStatus.SC_OK) {
-				logger.error("Failed to connect to Eyetv backend " + this.name);
+			HttpGet httpget = new HttpGet("http://" + server + ":" + port + "/live/status/0");
+						
+			
+			CloseableHttpResponse response = client.execute(httpget);				
+			
+			if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
 				return false;
 			}
 
 			// Read the response body.
-			String responseBody = getResponseBody(method);		 
+			String responseBody = getResponseBody(response);
+			
+			response.close();
+			
 			Object obj = parser.parse(responseBody);
 			JSONObject jsonObject = (JSONObject) obj;
 
 			return (Boolean)jsonObject.get("isUp");
 
-		} catch (HttpException e) {
-			logger.error("Fatal protocol violation: " + e.getMessage());
-			return false;
 		} catch (IOException e) {
 			logger.error("Fatal transport error: " + e.getMessage());
 			return false;
@@ -163,10 +164,7 @@ public class EyeTvBackend extends Backend {
 			logger.error("Error reading json from server");
 			return false;
 		} 
-		finally {
-			// Release the connection.
-			method.releaseConnection();
-		}  
+		  
 
 	}
 
@@ -174,19 +172,25 @@ public class EyeTvBackend extends Backend {
 	 * Tune the channel and check the channel to be present, eyetv take some time 
 	 * to make the channel available
 	 */
-	public boolean tuneChannel(BackendListener listener, String channelURL) throws BackendException {
+	public boolean tuneChannel(BackendListener listener, Channel channel) throws BackendException {
 		
 		int statusCode;
 		int retry = 5;
-		GetMethod method = new GetMethod(channelURL);
+				
+		HttpGet httpget = new HttpGet(channel.currentURL);
 		
+					
 		listener.onMessage("Channel url retrieved waiting for channel to tune");
 		
 		try{			
 			
 			do {
-				statusCode = client.executeMethod(method);
+				CloseableHttpResponse response = client.execute(httpget);
 
+				statusCode = response.getStatusLine().getStatusCode();
+				
+				response.close();
+				
 				if (statusCode != HttpStatus.SC_OK) {					
 					Thread.sleep(4000);
 					listener.onMessage("Eyetv backend " + this.name + " channel still not present, retrying") ;
@@ -194,13 +198,10 @@ public class EyeTvBackend extends Backend {
 				else {
 					return true;
 				}
-			} while (statusCode != HttpStatus.SC_OK && retry-- > 0);
+			} while (statusCode != 200 && retry-- > 0);
 		
 			return false;
 			
-		} catch (HttpException e) {
-			logger.error("Fatal protocol violation: " + e.getMessage());
-			throw new BackendException("Failed to tune channel");
 		} catch (IOException e) {
 			logger.error("Fatal transport error: " + e.getMessage());
 			throw new BackendException("Failed to tune channel");
@@ -209,11 +210,7 @@ public class EyeTvBackend extends Backend {
 			logger.error("Interrupted Exception");
 			throw new BackendException("Failed to tune channel");
 		}
-		finally {
-			// Release the connection.
-			method.releaseConnection();
-		}
-		
+				
 		
 	}
 	
@@ -223,17 +220,21 @@ public class EyeTvBackend extends Backend {
 	 * @return
 	 */
 	@Override
-	public synchronized String getChannelUrl(final int channelID) {
+	public synchronized String getChannelUrl(BackendListener listener, Channel channel) {
 
-		Channel channel = this.bouquets.get(0).channels.get(channelID);
-	
-		logger.debug("Calling tune url for channel " + channelID);
+			
+		logger.debug("Get channel URL for channel " + channel.getName());
 		
-		GetMethod method = new GetMethod("http://" + server + ":" + port + "/live/tuneto/0/" + channel.serviceID);
+		HttpGet httpget = new HttpGet("http://" + server + ":" + port + "/live/tuneto/0/" + channel.serviceID);
+				
 		
 		try {
-			// Execute the method.			
-			int statusCode = client.executeMethod(method);
+			// Execute the method.	
+			
+			CloseableHttpResponse response = client.execute(httpget);
+
+			int statusCode = response.getStatusLine().getStatusCode();
+			
 
 			if (statusCode != HttpStatus.SC_OK) {
 				logger.error("Failed to tune Eyetv backend " + this.name);
@@ -241,7 +242,10 @@ public class EyeTvBackend extends Backend {
 			}
 
 			// Read the response body.
-			String responseBody = getResponseBody(method);		 
+			String responseBody = getResponseBody(response);
+			
+			response.close();
+			
 			Object obj = parser.parse(responseBody);
 			JSONObject jsonObject = (JSONObject) obj;
 
@@ -249,11 +253,10 @@ public class EyeTvBackend extends Backend {
 						
 			String url = "http://" + server + ":" + port + "/live/stream/" + m3u8;
 			
+			channel.currentURL = url;
+			
 			return url;
 			
-		} catch (HttpException e) {
-			logger.error("Fatal protocol violation: " + e.getMessage());
-			return null;
 		} catch (IOException e) {
 			logger.error("Fatal transport error: " + e.getMessage());
 			return null;
@@ -262,25 +265,24 @@ public class EyeTvBackend extends Backend {
 			logger.error("Error reading json from server");
 			return null;
 		} 
-		finally {
-			// Release the connection.
-			method.releaseConnection();
-		}  
+		  
 	}
 	
 	
 	/**
 	 * helper handling gziped contents
 	 */
-	protected String getResponseBody(HttpMethod method) throws IOException{
-		Header contentEncoding = method.getResponseHeader("Content-Encoding");
+	protected String getResponseBody(CloseableHttpResponse response) throws IOException{
+		//Header contentEncoding = method.getResponseHeader("Content-Encoding");
+		
+		org.apache.http.Header contentEncoding = response.getLastHeader("Content-Encoding");
 
 		if(contentEncoding !=  null ){
 			String acceptEncodingValue = contentEncoding.getValue();
 			if(acceptEncodingValue.indexOf("gzip") != -1){	      
 				StringWriter responseBody = new StringWriter();
 				PrintWriter responseWriter = new PrintWriter(responseBody);
-				GZIPInputStream zippedInputStream =  new GZIPInputStream(method.getResponseBodyAsStream());
+				GZIPInputStream zippedInputStream =  new GZIPInputStream(response.getEntity().getContent());
 				BufferedReader r = new BufferedReader(new InputStreamReader(zippedInputStream));
 				String line = null;
 				while( (line =r.readLine()) != null){
@@ -290,7 +292,15 @@ public class EyeTvBackend extends Backend {
 			}
 		}
 
-		return method.getResponseBodyAsString();
+		BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+		 
+		StringBuffer result = new StringBuffer();
+		String line = "";
+		while ((line = rd.readLine()) != null) {
+			result.append(line);
+		}
+		
+		return result.toString();
 	}
 
 	/**
@@ -305,6 +315,14 @@ public class EyeTvBackend extends Backend {
 
 		bouquets.add(new Bouquet(0,bouquetName,0));		
 		name = "EyeTV Backend " + backendConfiguration.getServer();
+		
+		int timeout = 5;
+		RequestConfig config = RequestConfig.custom()
+		  //.setConnectTimeout(timeout * 1000)
+		  //.setConnectionRequestTimeout(timeout * 1000)
+		  .setSocketTimeout(timeout * 1000).build();
+		
+		client = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 	}
 
 }

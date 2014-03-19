@@ -67,8 +67,8 @@ public class ConverterFactory {
 			try {
 				converter = (Converter)converterClass.newInstance();
 				if (converter.CanHandle(inputUrl, inputFormat, outputUrl, outputFormat))  {
-					converter.openMedia(inputUrl, inputFormat);
-					converter.openOutput(outputUrl, outputFormat);
+					//converter.openMedia(inputUrl, inputFormat);
+					//converter.openOutput(outputUrl, outputFormat);
 		        	return converter;
 		        }
 			} catch (InstantiationException e) {

@@ -14,10 +14,17 @@ import org.tvheadend.tvhguide.htsp.HTSResponseHandler;
  */
 public class Channel implements Comparable<Channel> {
 	
+	/**
+	 * Attributes
+	 */
 	protected String name;
 	protected int id;
 	protected int number;
 	protected String serviceID;
+	protected String currentURL;
+	
+	// Contains the current EPG Event.
+	protected EPGEvent event;
 	
 	private Logger logger = LoggerFactory.getLogger(Channel.class);
 	
@@ -32,7 +39,9 @@ public class Channel implements Comparable<Channel> {
 		this.name = name;
 		this.id = id;
 		this.number = number;		
+		this.event = null;
 	}
+	
 	
 	
 	/**
@@ -40,6 +49,10 @@ public class Channel implements Comparable<Channel> {
 	 */
 	public void setServiceID(String serviceID) {
 		this.serviceID = serviceID;
+	}
+	
+	public void setEPGEvent(EPGEvent event) {
+		this.event = event;
 	}
 	
 	/**
@@ -61,9 +74,16 @@ public class Channel implements Comparable<Channel> {
 	}
 
 
+	public EPGEvent getEPGEvent() {
+		return event;
+	}
+	
 	public int compareTo(Channel o) {
 		// TODO Auto-generated method stub
-		return new Integer(number).compareTo(o.number);
-		
+		return new Integer(number).compareTo(o.number);	
+	}
+	
+	public boolean hasEPGEvent() {
+		return event != null;
 	}
 }

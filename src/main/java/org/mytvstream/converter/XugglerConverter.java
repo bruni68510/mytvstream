@@ -65,6 +65,7 @@ public class XugglerConverter extends Converter {
 	/**
 	 * Print informations about xuggler
 	 */
+	/*
 	static {
 		
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -80,9 +81,8 @@ public class XugglerConverter extends Converter {
 			e.printStackTrace();
 		}
 		
-		
-		
 	}
+	*/
 	
 	/**
 	 * Open media let's set the url of the reading media
@@ -329,6 +329,11 @@ public class XugglerConverter extends Converter {
 	protected void mainLoop() throws ConverterException 
 	{
 		
+		final String orgName = Thread.currentThread().getName();
+	    Thread.currentThread().setName(orgName + " - Xuggler Thread");
+		 
+		closed = false;
+		
 		iPacket = IPacket.make();
 		oAudioPacket = IPacket.make();
 		oVideoPacket = IPacket.make();
@@ -388,7 +393,12 @@ public class XugglerConverter extends Converter {
 		iPicture.delete();
 		oConvertedPicture.delete();
 		ocontainer.writeTrailer();
+		ocontainer.getStream(oAudioStreamIndex).getStreamCoder().close();
+		ocontainer.getStream(oVideoStreamIndex).getStreamCoder().close();		
 		ocontainer.close();
+		
+		icontainer.getStream(iAudioStreamIndex).getStreamCoder().close();
+		icontainer.getStream(iVideoStreamIndex).getStreamCoder().close();
 		icontainer.close();
 	}
 	

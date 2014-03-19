@@ -25,45 +25,93 @@
     <script src="/javascript/page.js"></script>
     
     
+    
     <script>
     
     
     $(function () {
-    
-      $.msg = function(text, style)
-      {
-        style = style || 'notice';           //<== default style if it's not set
-    
-        //create message and show it
-        $('<div>')
-          .attr('class', style)
-          .html(text)
-          .fadeIn('fast')
-          .insertBefore($('#flashcontent'))  //<== wherever you want it to show
-          .animate({opacity: 1.0}, 2500)     //<== wait 3 sec before fading ou
-          .fadeOut('slow', function()
-          {
-            $(this).remove();
-          });
+ 
+      $.apply = function(object, config) {
+        
+        if (object && config && typeof config === 'object') {
+            var i, j, k;
+
+            for (i in config) {
+                object[i] = config[i];
+            }
+            
+        }
+
+        return object;
       };
+      
+ 
     
+      $.application_msg = function() {
+      
+        /**
+         * default configuration of the application msg 
+         */
+         
+        var config = {
+          type : 'alert_success',
+          style : '',          
+          target : '#flashcontent',
+          time_to_display : 2000,
+          text : ''                    
+        };
+        
+        return {
+          init : function(apply_config) {        
+            $.apply(config,apply_config);
+            return this;        
+          },
+        
+          display : function() {
+            $('<div>')
+            .attr('class', 'alert' + ' ' + config.type + ' ' + config.style)
+            .html(config.text)
+            .fadeIn('fast')
+            .insertBefore($(config.target))  
+            .animate({opacity: 1.0}, config.time_to_display)  
+            .fadeOut('slow', function()
+            {
+              $(this).remove();
+            });
+          }
+       };        
+              
+      };
+      
+      
       var ws = $.gracefulWebSocket('ws://<c:out value="${server_name}"/>:8085/events/');
      
       ws.onmessage = function (event) {
         var messageFromServer = event.data;
-        //console.log(messageFromServer);
-        
         var obj = jQuery.parseJSON( messageFromServer );
         
         if (obj.action == "CHANNELFAILED") {
-          $.msg("Failed to tune channel:" + obj.error, "error");
+          //$.channel_msg("Failed to tune channel:" + obj.error, "alert alert-danger");
+          $.application_msg().init({
+            type : 'alert-danger',
+            style : 'channel_msg',
+            text : "Failed to tune channel:" + obj.error
+          }).display();
         }
         
         if (obj.action == "CHANNELMESSAGE") {
-          $.msg(obj.message);
+          $.application_msg().init({
+            type : 'alert-warning',
+            style : 'channel_msg',
+            text : obj.message
+          }).display();
         }
         
         if (obj.action == "CHANNELSTARTED") {
+          
+          var channel = obj.channel;
+          var bouquet = obj.bouquet;
+          var backend = obj.backend;
           
           $("#flashcontent").empty();
           
@@ -79,8 +127,26 @@
             ' <param value="source=<c:out value="${stream_name}"/>&amp;type=video&amp;streamtype=rtmp&amp;controltype=1&amp;autostart=true&amp;controls=true&amp;darkcolor=000000&amp;brightcolor=4c4c4c&amp;controlcolor=FFFFFF&amp;hovercolor=67A8C1&amp;seekcolor=D3D3D3&amp;jsapi=true&amplive=1&amp;server=rtmp://<c:out value="${server_name}"/>/flvplayback" name="flashvars"> ' +
             '</object> '
            );
-                        
+           
+           var epgmessage = {
+            action : "EPG_QUERY",
+            channel : channel,
+            bouquet : bouquet,
+            backend : backend
+           };
+           
+           ws.send($.toJSON(epgmessage));                          
         }
+        
+        if (obj.action == "EPG_QUERY_RESULT") {
+          $.application_msg().init({
+            type : 'alert-success',
+            style : 'epg_msg',
+            text : obj.epgevent,
+            time_to_display : 7000
+          }).display();
+        }
+        
       };
     
       $.jstree.defaults.core.themes.variant = "small"; 
@@ -101,7 +167,7 @@
           
           ws.send($.toJSON(myObj));
           
-          $("#flashcontent").empty(); 
+         // $("#flashcontent").empty(); 
         }
       });
       

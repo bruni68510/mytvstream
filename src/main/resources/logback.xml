@@ -14,6 +14,7 @@
  <logger name="com.flazr.amf.Amf0Value" level="INFO" />
  <logger name="org.mytvstream" level="DEBUG"/>
  <logger name="com.xuggle" level="DEBUG"/>
+ <logger name="org.apache.commons.httpclient" level="TRACE" />
 
   <root level="info">
     <appender-ref ref="STDOUT" />

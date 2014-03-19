@@ -11,6 +11,9 @@ public class RTMPProducerServer extends ProducerServer {
 	}
 	
 	public void run() {
+		final String orgName = Thread.currentThread().getName();
+        Thread.currentThread().setName(orgName + " - RTMP Thread");
+        
 		try {			
 			RtmpServer.main(null);
 			

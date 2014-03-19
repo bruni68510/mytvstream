@@ -31,6 +31,7 @@ import org.mytvstream.backend.BackendReconnectThread;
 import org.mytvstream.configuration.Configuration;
 import org.mytvstream.configuration.Configuration.Client;
 import org.mytvstream.converter.ConverterException;
+import org.mytvstream.flashwebsocket.FlashClientWebSocketServlet;
 import org.mytvstream.producerserver.ProducerServer;
 import org.mytvstream.producerserver.ProducerServerException;
 import org.mytvstream.producerserver.ProducerServerFactory;
@@ -216,7 +217,7 @@ public class Main {
         context.addServlet(holderDefault,"/");
 
         // Add a websocket to a specific path spec
-        ServletHolder holderEvents = new ServletHolder("ws-events", MainWebSocketServlet.class);
+        ServletHolder holderEvents = new ServletHolder("ws-events", FlashClientWebSocketServlet.class);
         context.addServlet(holderEvents, "/events/*");
         
         // Start Server

@@ -1,6 +1,7 @@
 package org.mytvstream.backend;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.tvheadend.tvhguide.htsp.HTSConnection;
 import org.tvheadend.tvhguide.htsp.HTSMessage;
@@ -32,10 +33,9 @@ public abstract class Backend implements IBackend {
 	protected ArrayList<Bouquet> bouquets = new ArrayList<Bouquet>();
 	
 	/**
-	 * Get a list of channels.
+	 * Simple getters.
 	 */
 	public ArrayList<Bouquet> getBouquets() {
-		// TODO Auto-generated method stub
 		return bouquets;
 	}
 	
@@ -43,22 +43,51 @@ public abstract class Backend implements IBackend {
 		return bouquet.getChannels();
 	}
 	
-	/**
-	 * Not implemented on generic backend
-	 * @param connection
-	 * @return
-	 */
-	public String getChannelUrl(int channelID) throws BackendException {		
-		throw new BackendException("Not available");
-	}
+	
 	
 	/**
-	 * Not implemented on generic backend
-	 * 
+	 * Retrieve a bouquet from it's ID
 	 */
-	public boolean tuneChannel(String channelURL) throws BackendException {
-		throw new BackendException("Not available");
+	public Bouquet getBouquetByID(int bouquetID) throws BackendException {
+		// TODO Auto-generated method stub
+		Bouquet bouquet = null;
+		
+		Iterator<Bouquet> it = bouquets.iterator();
+		
+		while (it.hasNext()) {
+			bouquet = it.next();
+			if (bouquet.getID() == bouquetID) {
+				return bouquet;
+			}
+				
+		}
+		
+		throw new BackendException("bouquet not found");
+		
 	}
+	/**
+	 * Get a channel from it's bouquet and channel ID
+	 * @param bouquet
+	 * @param channelID
+	 * @return
+	 * @throws BackendException
+	 */
+	public Channel getChannelByID(Bouquet bouquet, int channelID) throws BackendException {
+		Channel channel = null;
+		
+		
+		Iterator<Channel> it = bouquet.channels.iterator();
+		
+		while(it.hasNext()) {
+			channel = it.next();
+			if (channel.getID() == channelID) {
+				return channel;
+			}
+		}
+		
+		throw new BackendException("Channel not found");
+	}
+	
 		
 	/**
 	 * Get the registered name of the backend
@@ -95,4 +124,10 @@ public abstract class Backend implements IBackend {
 		password = backendConfiguration.getPassword();
 		httpport = backendConfiguration.getHttpport();
 	}
+	
+	/**
+	 * Copy constructor
+	 * @param backend
+	 */
+	protected Backend() {	}
 }
