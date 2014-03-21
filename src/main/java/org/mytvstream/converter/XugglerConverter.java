@@ -1,6 +1,7 @@
 package org.mytvstream.converter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -65,13 +66,14 @@ public class XugglerConverter extends Converter {
 	/**
 	 * Print informations about xuggler
 	 */
-	/*
+	
 	static {
 		
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		PrintStream ps = new PrintStream(os);
 		
 		Configuration.printSupportedContainerFormats(ps);
+		Configuration.printSupportedCodecs(ps);
 		String output;
 		try {
 			output = os.toString("UTF8");
@@ -82,7 +84,7 @@ public class XugglerConverter extends Converter {
 		}
 		
 	}
-	*/
+	
 	
 	/**
 	 * Open media let's set the url of the reading media
@@ -137,7 +139,32 @@ public class XugglerConverter extends Converter {
 		return true;
 	}
 	
+	/**
+	 * 	open converter output using an output stream
+	 * @param stream : Output stream for writing 
+	 * @param outputFormat : Output format to produce
+	 * @return success / false
+	 * @throws ConverterException
+	 */
+	public boolean openOutput(OutputStream stream, ConverterFormatEnum outputFormat) throws ConverterException {
 		
+		ocontainer = IContainer.make();
+		ocontainerFormat = IContainerFormat.make();
+		ocontainerFormat.setOutputFormat(getConverterFormat(outputFormat), null, null);
+		
+		//avoid crash with OutputStream
+		ocontainer.setFormat(ocontainerFormat);
+		
+		int i = ocontainer.open(stream, ocontainerFormat);
+		
+		if (i < 0 ) {
+			throw new ConverterException("could not open output media");
+		}
+		
+		logger.debug(ocontainer.toString());
+		
+		return true;
+	}
 	/**
 	 * Helper reading streams from 
 	 * @param audioLanguage : Preferred audio language to use in the conversion (only one audio language will be transcoded).
@@ -216,7 +243,12 @@ public class XugglerConverter extends Converter {
 		audioCoder.setChannels(2);
 		audioCoder.setBitRate(audioBitrate);
 		
-		audioCoder.setSampleFormat(Format.FMT_S16);
+		if (audioEncoder == ConverterCodecEnum.VORBIS) {
+			audioCoder.setSampleFormat(Format.FMT_FLT);
+		}
+		else {
+			audioCoder.setSampleFormat(Format.FMT_S16);
+		}
 		
 		oAudioStreamIndex = audioStream.getIndex();
 		
@@ -257,7 +289,12 @@ public class XugglerConverter extends Converter {
 	    			  throw new ConverterException("failed to encode video");
 	    	  
 	    		  if (oVideoPacket.isComplete()) {
-	    			  ocontainer.writePacket(oVideoPacket, true);
+	    			  int result = ocontainer.writePacket(oVideoPacket, true);
+	    			  	    			  
+	            	  if (result < 0 ) {
+	            		  throw new ConverterException("Failed to write video to output");
+	            	  }
+	            	  
 	    			  oVideoPacket.delete();
 	    			  oVideoPacket = IPacket.make();
 	    		  }
@@ -307,7 +344,11 @@ public class XugglerConverter extends Converter {
               // if a complete packed was produced write it out
     	      
               if (oAudioPacket.isComplete()) {
-            	  ocontainer.writePacket(oAudioPacket, true);
+            	  logger.trace("writing audio packet");
+            	  result = ocontainer.writePacket(oAudioPacket, true);
+            	  if (result < 0 ) {
+            		  throw new ConverterException("Failed to write to output");
+            	  }
             	  //oAudioPacket.delete();
             	  //oAudioPacket = IPacket.make();
               }
@@ -417,6 +458,12 @@ public class XugglerConverter extends Converter {
 		if (codec.equals(ConverterCodecEnum.FLV1)) {
 			return "flv";
 		}
+		if (codec.equals(ConverterCodecEnum.VORBIS)) {
+			return "libvorbis";
+		}
+		if (codec.equals(ConverterCodecEnum.THEORA)) {
+			return "libtheora";
+		}
 		return null;
 	}
 		
@@ -424,6 +471,8 @@ public class XugglerConverter extends Converter {
 	protected String getConverterFormat(ConverterFormatEnum format) {
 		if (format.equals(ConverterFormatEnum.FLV))
 			return "flv";
+		if (format.equals(ConverterFormatEnum.OGG))
+			return "ogg";
 		if (format.equals(ConverterFormatEnum.MKV))
 			return "matroska";
 		if (format.equals(ConverterFormatEnum.HLS))

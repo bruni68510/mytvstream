@@ -1,6 +1,6 @@
 <configuration>
-  <!-- client configuration only supported type is flash/rtmp-->
-  <client type="flash" producerserver="rtmp" audiocodec="mp3" audiobitrate="128000" videocodec="flv" videobitrate="2048000"/>            
+  <!-- client configuration may be either flash/rtmp or html/empty -->
+  <client type="flash" producerserver="rtmp" audiocodec="mp3" audiobitrate="128000" videocodec="flv" videobitrate="512000"/>            
   
   <!--  backend configurations multiple -->
   <backends>
@@ -11,9 +11,9 @@
       <usernmame>hts</usernmame>
       <password>hts</password>
     </backend>    
-    <backend type="eyetv">
+    <!-- backend type="eyetv">
       <server>192.168.0.7</server>
       <port>2170</port>      
-    </backend>
+    </backend!-->
   </backends>
 </configuration>

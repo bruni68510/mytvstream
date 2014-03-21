@@ -30,7 +30,13 @@
     
     
     $(function () {
- 
+    
+      var ws = $.gracefulWebSocket('ws://<c:out value="${server_name}"/>:8085/events/'); 
+  
+      var bouquet = 0;
+      var channel = 0;
+      var backend = 0;
+  
       $.apply = function(object, config) {
         
         if (object && config && typeof config === 'object') {
@@ -45,7 +51,18 @@
         return object;
       };
       
- 
+      $.send_epg_query = function() {
+      
+          var epgmessage = {
+            action : "EPG_QUERY",
+            channel : channel,
+            bouquet : bouquet,
+            backend : backend
+          };
+           
+          ws.send($.toJSON(epgmessage));     
+      
+      };
     
       $.application_msg = function() {
       
@@ -82,9 +99,6 @@
        };        
               
       };
-      
-      
-      var ws = $.gracefulWebSocket('ws://<c:out value="${server_name}"/>:8085/events/');
      
       ws.onmessage = function (event) {
         var messageFromServer = event.data;
@@ -109,9 +123,9 @@
         
         if (obj.action == "CHANNELSTARTED") {
           
-          var channel = obj.channel;
-          var bouquet = obj.bouquet;
-          var backend = obj.backend;
+          channel = obj.channel;
+          bouquet = obj.bouquet;
+          backend = obj.backend;
           
           $("#flashcontent").empty();
           
@@ -127,15 +141,9 @@
             ' <param value="source=<c:out value="${stream_name}"/>&amp;type=video&amp;streamtype=rtmp&amp;controltype=1&amp;autostart=true&amp;controls=true&amp;darkcolor=000000&amp;brightcolor=4c4c4c&amp;controlcolor=FFFFFF&amp;hovercolor=67A8C1&amp;seekcolor=D3D3D3&amp;jsapi=true&amplive=1&amp;server=rtmp://<c:out value="${server_name}"/>/flvplayback" name="flashvars"> ' +
             '</object> '
            );
-           
-           var epgmessage = {
-            action : "EPG_QUERY",
-            channel : channel,
-            bouquet : bouquet,
-            backend : backend
-           };
-           
-           ws.send($.toJSON(epgmessage));                          
+            
+           $.send_epg_query();   
+                                
         }
         
         if (obj.action == "EPG_QUERY_RESULT") {

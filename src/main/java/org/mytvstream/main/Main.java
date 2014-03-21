@@ -31,7 +31,8 @@ import org.mytvstream.backend.BackendReconnectThread;
 import org.mytvstream.configuration.Configuration;
 import org.mytvstream.configuration.Configuration.Client;
 import org.mytvstream.converter.ConverterException;
-import org.mytvstream.flashwebsocket.FlashClientWebSocketServlet;
+import org.mytvstream.frontend.HTML5VideoServlet;
+import org.mytvstream.frontend.flashwebsocket.FlashClientWebSocketServlet;
 import org.mytvstream.producerserver.ProducerServer;
 import org.mytvstream.producerserver.ProducerServerException;
 import org.mytvstream.producerserver.ProducerServerFactory;
@@ -196,6 +197,9 @@ public class Main {
         ClassLoader jspClassLoader = new URLClassLoader(new URL[0], this.getClass().getClassLoader());
         context.setClassLoader(jspClassLoader);
 
+        // ADD the HTML5Servlet
+        context.addServlet(HTML5VideoServlet.class, "/html5video");        
+        
         // Add JSP Servlet (must be named "jsp")
         ServletHolder holderJsp = new ServletHolder("jsp",JspServlet.class);
         holderJsp.setInitOrder(0);

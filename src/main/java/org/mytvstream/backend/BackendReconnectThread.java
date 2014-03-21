@@ -15,7 +15,7 @@ public class BackendReconnectThread extends Thread {
 	
 	public boolean interrupted = false;
 	
-	private static int THREAD_WAIT = 5000;
+	private static int THREAD_WAIT = 60000;
 	
 	public void run() {
 		

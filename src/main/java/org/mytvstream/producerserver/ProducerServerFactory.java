@@ -62,8 +62,7 @@ public class ProducerServerFactory {
 		Iterator<Entry<String, Class<?>>> it = registeredProducerServer.entrySet().iterator();
 	    while (it.hasNext()) {
 	        Entry<String, Class<?>> pairs = it.next();
-	        System.out.println(pairs.getKey() + " = " + pairs.getValue());
-	        
+	        	        
 	        Class<?> producerServerClass = (Class<?>) pairs.getValue();	        
 			try {
 				producerServer = (ProducerServer)producerServerClass.newInstance();

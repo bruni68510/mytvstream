@@ -5,21 +5,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URI;
 import java.util.Iterator;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.params.HttpParams;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -27,8 +21,6 @@ import org.json.simple.parser.ParseException;
 import org.mytvstream.converter.ConverterFormatEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tvheadend.tvhguide.htsp.HTSMessage;
-import org.tvheadend.tvhguide.htsp.HTSResponseHandler;
 
 
 public class EyeTvBackend extends Backend {

@@ -1,5 +1,7 @@
 package org.mytvstream.converter;
 
+import java.io.OutputStream;
+
 public interface IConverter {
 
 	/**
@@ -15,6 +17,7 @@ public interface IConverter {
 	 * @param outputFormat : Force the output format.
 	 */
 	public boolean openOutput(String mediaFile, ConverterFormatEnum outputFormat) throws ConverterException;
+	public boolean openOutput(OutputStream stream, ConverterFormatEnum outputFormat) throws ConverterException;
 	
 	public void setupReadStreams(String audioLanguage) throws ConverterException;
 	

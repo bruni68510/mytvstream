@@ -6,10 +6,15 @@ package org.mytvstream.converter;
  *
  */
 public enum ConverterCodecEnum {
-	H264("h264"),
+	
+	// video codecs
+	H264("h264"),	
+	THEORA("theora"),
+	FLV1("flv"),
+	// audio codecs
 	AAC("aac"),
 	MP3("mp3"),
-	FLV1("flv");
+	VORBIS("vorbis");
 	
 	/**
      * @param text

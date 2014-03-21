@@ -66,6 +66,13 @@
     <version>${http_client-version}</version>
   </dependency>
   
+  <!-- This required for flazr -->
+  <dependency>
+    <groupId>commons-httpclient</groupId>
+    <artifactId>commons-httpclient</artifactId>
+    <version>3.1</version>
+  </dependency>
+  
 	  <dependency>
 	   <groupId>xuggle</groupId>
 	   <artifactId>xuggle-xuggler</artifactId>
@@ -172,7 +179,7 @@
 			        <execution>
 			            <configuration>
 			                <mainClass>
-			                    org.tvstreamer.main.Main
+			                    org.mytvstream.main.Main
 			                </mainClass>
 			            </configuration>
 			            <goals>
