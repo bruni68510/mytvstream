@@ -49,9 +49,11 @@ public class HTML5VideoServlet extends HttpServlet {
 
 			HttpSession session = request.getSession();
 			session.setMaxInactiveInterval(10*60);
-			
-			response.setContentType("application/ogg");
-			
+					
+			response.setContentType("application/webm");
+			response.setStatus(200);
+			//response.setContentLength(100000);
+			response.flushBuffer();
 			
 		    /**
 		     * Retrieve servlet parameters. 
@@ -92,14 +94,14 @@ public class HTML5VideoServlet extends HttpServlet {
 			
 			converter.openMedia(inputUrl, backend.getDefaultFormat());
 			
-			converter.openOutput(response.getOutputStream(), ConverterFormatEnum.OGG);
+			converter.openOutput(response.getOutputStream(), ConverterFormatEnum.WEBM);
 			
 			converter.setupReadStreams("fre");
 			
 			Configuration configuration = Main.getInstance().getConfiguration();
 			
 			ConverterCodecEnum audiocodec = ConverterCodecEnum.VORBIS;
-			ConverterCodecEnum videocodec = ConverterCodecEnum.THEORA;			
+			ConverterCodecEnum videocodec = ConverterCodecEnum.VP8;			
 			
 			converter.setupWriteStreams(
 				videocodec, 

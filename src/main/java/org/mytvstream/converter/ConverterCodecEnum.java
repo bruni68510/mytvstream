@@ -11,6 +11,7 @@ public enum ConverterCodecEnum {
 	H264("h264"),	
 	THEORA("theora"),
 	FLV1("flv"),
+	VP8("vp8"),
 	// audio codecs
 	AAC("aac"),
 	MP3("mp3"),

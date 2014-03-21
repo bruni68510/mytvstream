@@ -51,6 +51,8 @@ public class XugglerConverter extends Converter {
 	int oAudioStreamIndex = -1;
 	int oVideoStreamIndex = -1;
 	
+	int audioPacketWritten = 0;
+	
 	// audio resampler
 	IAudioResampler audioResampler;
 	
@@ -316,6 +318,7 @@ public class XugglerConverter extends Converter {
 	    // all audio frames are extracted from the packet 
 	    
 	    int offset = 0;
+	    	    
 	    while (offset < iPacket.getSize())
 	    {
 	      
@@ -344,13 +347,20 @@ public class XugglerConverter extends Converter {
               // if a complete packed was produced write it out
     	      
               if (oAudioPacket.isComplete()) {
-            	  logger.trace("writing audio packet");
+            	  
+            	  audioPacketWritten++;
+            	  
+            	  if (audioPacketWritten % 20 == 0) {
+            		  logger.trace("writing audio packet");
+            		  ocontainer.flushPackets();
+            	  }
             	  result = ocontainer.writePacket(oAudioPacket, true);
             	  if (result < 0 ) {
             		  throw new ConverterException("Failed to write to output");
             	  }
-            	  //oAudioPacket.delete();
-            	  //oAudioPacket = IPacket.make();
+            	  
+            	  oAudioPacket.delete();
+            	  oAudioPacket = IPacket.make();
               }
 
     	    } 
@@ -464,6 +474,9 @@ public class XugglerConverter extends Converter {
 		if (codec.equals(ConverterCodecEnum.THEORA)) {
 			return "libtheora";
 		}
+		if (codec.equals(ConverterCodecEnum.VP8)) {
+			return "libvpx";
+		}
 		return null;
 	}
 		
@@ -477,6 +490,8 @@ public class XugglerConverter extends Converter {
 			return "matroska";
 		if (format.equals(ConverterFormatEnum.HLS))
 			return "applehttp";
+		if (format.equals(ConverterFormatEnum.WEBM))
+			return "webm";
 		return "";
 	}
 	

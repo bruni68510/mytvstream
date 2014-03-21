@@ -4,5 +4,6 @@ public enum ConverterFormatEnum {
 	FLV,
 	MKV,
 	OGG,
+	WEBM,
 	HLS;
 }
