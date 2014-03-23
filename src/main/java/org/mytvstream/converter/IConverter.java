@@ -17,8 +17,7 @@ public interface IConverter {
 	 * @param outputFormat : Force the output format.
 	 */
 	public boolean openOutput(String mediaFile, ConverterFormatEnum outputFormat) throws ConverterException;
-	public boolean openOutput(OutputStream stream, ConverterFormatEnum outputFormat) throws ConverterException;
-	
+		
 	public void setupReadStreams(String audioLanguage) throws ConverterException;
 	
 	public void setupWriteStreams(ConverterCodecEnum videoCodec, int videoBitrate, ConverterCodecEnum audioCodec, int audioBitrate) throws ConverterException;

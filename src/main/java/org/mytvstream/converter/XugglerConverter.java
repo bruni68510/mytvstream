@@ -68,7 +68,7 @@ public class XugglerConverter extends Converter {
 	/**
 	 * Print informations about xuggler
 	 */
-	
+	/*
 	static {
 		
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -86,7 +86,7 @@ public class XugglerConverter extends Converter {
 		}
 		
 	}
-	
+	*/
 	
 	/**
 	 * Open media let's set the url of the reading media

@@ -13,6 +13,7 @@ import org.mytvstream.converter.ConverterCodecEnum;
 import org.mytvstream.converter.ConverterException;
 import org.mytvstream.converter.ConverterFactory;
 import org.mytvstream.converter.ConverterFormatEnum;
+import org.mytvstream.converter.WebMConverter;
 import org.mytvstream.converter.XugglerConverter;
 import org.mytvstream.main.Main;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,9 @@ public class StartChannelMessageHandler extends MessageHandler {
 			long channelNr = (Long)object.get("channel");					
 			String rtmp_url = (String)object.get("rtmpurl");
 			String rtmp_stream = (String)object.get("rtmpstream");
-		
+
+			long port = ((int)Math.random() * 10000) + 1024; 
+			
 			Backend backend = Main.getInstance().getBackend().get((int)backendNr);
 			
 			
@@ -50,6 +53,8 @@ public class StartChannelMessageHandler extends MessageHandler {
 				logger.debug("Get Channel");
 				
 				Channel channel = backend.getChannelByID(backend.getBouquetByID((int)bouquetNr), (int)channelNr);
+				
+				Configuration configuration = Main.getInstance().getConfiguration();
 				
 				logger.debug("Get Channel URL");
 				
@@ -80,43 +85,87 @@ public class StartChannelMessageHandler extends MessageHandler {
 			
 				converter.close();
 				
-				converter = new XugglerConverter();
+				if (format.equals("FLV")) { 
+					
+					logger.debug("opening xuggler converter");
+					
+					converter = new XugglerConverter();
 				
-				converter.openMedia(inputUrl, backend.getDefaultFormat());
+					converter.openMedia(inputUrl, backend.getDefaultFormat());
 				
-				converter.openOutput(outputUrl, ConverterFormatEnum.valueOf(format));
+					converter.openOutput(outputUrl, ConverterFormatEnum.valueOf(format));
 				
-				converter.setupReadStreams("fre");
+					converter.setupReadStreams("fre");					
 				
-				Configuration configuration = Main.getInstance().getConfiguration();
+					ConverterCodecEnum audiocodec = ConverterCodecEnum.MP3;
+					ConverterCodecEnum videocodec = ConverterCodecEnum.H264;
+					if (configuration.getClient().getAudiocodec().equals("flv")) {
+						videocodec = ConverterCodecEnum.FLV1;
+					}
+					if (configuration.getClient().getAudiocodec().equals("aac")) {
+						videocodec = ConverterCodecEnum.AAC;
+					}
 				
-				ConverterCodecEnum audiocodec = ConverterCodecEnum.MP3;
-				ConverterCodecEnum videocodec = ConverterCodecEnum.H264;
-				if (configuration.getClient().getAudiocodec().equals("flv")) {
-					videocodec = ConverterCodecEnum.FLV1;
+					converter.setupWriteStreams(
+						videocodec, 
+						configuration.getClient().getVideobitrate().intValue(), 
+						audiocodec, 
+						configuration.getClient().getAudiobitrate().intValue()
+					);
+					
+					converter.start();
+				}	
+				
+				else if (format.equals("WEBM")){
+					
+					logger.debug("opening webm converter");
+					
+					converter = new WebMConverter();
+					
+					converter.openMedia(inputUrl, backend.getDefaultFormat());
+					
+					JSONObject obj = new JSONObject();
+					obj.put("action", "CHANNELSTARTED");
+					obj.put("backend", new Long(backendNr));
+					obj.put("bouquet", new Long(bouquetNr));
+					obj.put("channel", new Long(channelNr));
+					obj.put("port", port);
+					obj.put("rnd", new Long((int)(Math.random() * 10000)));
+					sendMessage(obj);
+					
+					converter.openOutput("tcp://localhost:" + port + "?listen=1&listen_timeout=10000", ConverterFormatEnum.valueOf(format));
+					
+					logger.debug("Done opening output");
+					
+					converter.setupReadStreams("");
+					
+					ConverterCodecEnum audiocodec = ConverterCodecEnum.VORBIS;
+					ConverterCodecEnum videocodec = ConverterCodecEnum.VP8;
+					
+					converter.setupWriteStreams(videocodec, 
+						configuration.getClient().getVideobitrate().intValue(), 
+						audiocodec, 
+						configuration.getClient().getAudiobitrate().intValue()
+					);
+					
+					converter.start();
+					
+					logger.debug("Converter started");
+					
+					return true;
+					
 				}
-				if (configuration.getClient().getAudiocodec().equals("aac")) {
-					videocodec = ConverterCodecEnum.AAC;
-				}
 				
-				converter.setupWriteStreams(
-					videocodec, 
-					configuration.getClient().getVideobitrate().intValue(), 
-					audiocodec, 
-					configuration.getClient().getAudiobitrate().intValue()
-				);
-			
-				converter.start();
 				
 			} catch (ConverterException e1) {
 				// TODO Auto-generated catch block
-				logger.error(e1.getMessage());
+				logger.error("Converter exception : " + e1.getMessage());
 				sendChannelFailedMessage(e1.getMessage());
 				converter.close();
 				return true;
 			} catch (BackendException e) {
 				// TODO Auto-generated catch block
-				logger.error(e.getMessage());
+				logger.error("Backend exception : " + e.getMessage());
 				sendChannelFailedMessage(e.getMessage());
 				converter.close();
 				return true;

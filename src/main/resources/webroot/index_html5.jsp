@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="page.css">
     
     <script src="/javascript/jquery.js"></script>
-    <script src="/javascript/jquery.json-2.4.js"></script>
     <script src="/javascript/jquery.gracefulWebSocket.js"></script>
+    <script src="/javascript/jquery.json-2.4.js"></script>
     
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/jstree/jstree.min.js"></script>    
@@ -120,7 +120,26 @@
             text : obj.message
           }).display();
         }
-               
+        
+        if (obj.action == "CHANNELSTARTED") {
+          
+          channel = obj.channel;
+          bouquet = obj.bouquet;
+          backend = obj.backend;
+          var port = obj.port;
+          var rnd = obj.rnd;
+          
+          $("#flashcontent").empty();
+          
+          $("#flashcontent").append(            
+            '<video height="100%" width="100%" controls="controls" preload="none" autoplay="true">  ' + 
+             '<source src="http://192.168.0.35:8085/html5video?port=' + port + '&rnd=' + rnd + '" type="video/webm" > ' +
+            '</video> '
+           );
+            
+           $.send_epg_query();   
+                                
+        }
         
         if (obj.action == "EPG_QUERY_RESULT") {
           $.application_msg().init({
@@ -138,16 +157,18 @@
       
       $('#tree_div').on("changed.jstree", function (e, data) {
         if (data.node.data.channel) {
-          
-          $("#html5content").empty();
-                  
         
-          $("#html5content").append(            
-            '<video height="100%" width="100%" controls="controls" preload="none"> ' + 
-            '<source src="http://<c:out value="${server_name}"/>:8085/html5video?channel=1&backend=0&bouquet=0&id="' + '<c:out value="${stream_name}"/>' + ' "type="video/ogg" preload="none" autoplay/>'+
-            '</video> '
-           );
-             
+          var myObj = {
+            action: "CHANNELSTART", 
+            format : "WEBM",
+            backend : data.node.data.backend,
+            bouquet : data.node.data.bouquet,
+            channel : data.node.data.channel,
+          };
+          
+          ws.send($.toJSON(myObj));
+          
+         // $("#flashcontent").empty(); 
         }
       });
       
@@ -200,9 +221,8 @@
        </div>
        
        <div class="col-md-9 fill" id="flash">
-          <div id="html5content" class="fill" />
-            <video width="100%" height="100%">                          
-            </video>
+          <div id="flashcontent" class="fill" />
+            <video width="100%" height="100%" />
           </div>
        </div>    
      </div>

@@ -1,25 +1,18 @@
 package org.mytvstream.frontend;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.net.Socket;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.mytvstream.backend.Backend;
-import org.mytvstream.backend.BackendException;
-import org.mytvstream.backend.BackendListener;
-import org.mytvstream.backend.Channel;
-import org.mytvstream.configuration.Configuration;
-import org.mytvstream.converter.Converter;
-import org.mytvstream.converter.ConverterCodecEnum;
-import org.mytvstream.converter.ConverterException;
-import org.mytvstream.converter.ConverterFormatEnum;
-import org.mytvstream.converter.XugglerConverter;
-import org.mytvstream.main.Main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,97 +33,60 @@ public class HTML5VideoServlet extends HttpServlet {
 
 	private static final Logger logger = LoggerFactory.getLogger(HTML5VideoServlet.class);
 	
+	
+	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 	{
 	   		
-				
-		try 
-		{
-
-			HttpSession session = request.getSession();
-			session.setMaxInactiveInterval(10*60);
-					
-			response.setContentType("application/webm");
-			response.setStatus(200);
-			//response.setContentLength(100000);
-			response.flushBuffer();
-			
-		    /**
+			/**
 		     * Retrieve servlet parameters. 
 		     */
-			int backendNr = new Integer(request.getParameter("backend")).intValue();
-			long bouquetNr = new Integer(request.getParameter("bouquet")).longValue();
-			long channelNr = new Integer(request.getParameter("channel")).longValue();
+			int port = new Integer(request.getParameter("port")).intValue();	
+		
+			
+			try {
+				
+				HttpSession session = request.getSession();
+				session.setMaxInactiveInterval(10*60);
+						
+				response.setContentType("video/webm");
+				//response.setContentLength(100000000);
+				response.setStatus(200);
+				
+				// Set standard HTTP/1.1 no-cache headers.
+				response.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
 
-			
-			/**
-			 * Get the backend
-			 */
-			Backend backend = Main.getInstance().getBackend().get(backendNr);
-		
-			/**
-			 * Get the channel
-			 */
-			
-			Channel channel = backend.getChannelByID(backend.getBouquetByID((int)bouquetNr), (int)channelNr);
-			
-			logger.debug("Get Channel URL");
-			
-			String inputUrl = backend.getChannelUrl(new BackendListener() {
-				@Override
-				public void onMessage(String message) {}
+				// Set standard HTTP/1.0 no-cache header.
+				response.setHeader("Pragma", "no-cache");
+								
+				//PrintWriter writer = response.getWriter();
 				
-			}, channel);
-			
-			logger.debug("tune Channel");
-			
-			backend.tuneChannel(new BackendListener() {
-				@Override
-				public void onMessage(String message) {}
+				 
 				
-			}, channel);
+				final Socket socket = new Socket("localhost", port);
+				
+			    final BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
+			    final BufferedOutputStream outStream = new BufferedOutputStream(response.getOutputStream());
+			    final byte[] buffer = new byte[4096];
+			    for (int read = inStream.read(buffer); read >= 0; read = inStream.read(buffer))
+			        outStream.write(buffer, 0, read);
+			    
+			    
+			    inStream.close();
+			    outStream.close();
+			   
+			    logger.debug("video done");
+			    	            
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				logger.error("IOException in HTML5VideoServlet:" + e.getMessage());
+			}
+			finally {
 			
-			Converter converter = new XugglerConverter();
-			
-			converter.openMedia(inputUrl, backend.getDefaultFormat());
-			
-			converter.openOutput(response.getOutputStream(), ConverterFormatEnum.WEBM);
-			
-			converter.setupReadStreams("fre");
-			
-			Configuration configuration = Main.getInstance().getConfiguration();
-			
-			ConverterCodecEnum audiocodec = ConverterCodecEnum.VORBIS;
-			ConverterCodecEnum videocodec = ConverterCodecEnum.VP8;			
-			
-			converter.setupWriteStreams(
-				videocodec, 
-				configuration.getClient().getVideobitrate().intValue(), 
-				audiocodec, 
-				configuration.getClient().getAudiobitrate().intValue()
-			);
-		
-			converter.start();
-			
-			converter.join();
-			
-			logger.debug("Converter done");
-		}
-		
-		catch(BackendException e) {
-			logger.error("Backend exception: "+ e.getMessage());
-		} catch (ConverterException e) {
-			// TODO Auto-generated catch block
-			logger.error("Converter exception: "+ e.getMessage());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			logger.error("Servlet IO Exception : " +e.getMessage());
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			logger.error("Interrupted Exception : " +e.getMessage());
-		}
-		
+				 logger.debug("video done");
+			}
+		    
 	}
-	
-	
+		
+				
 }
