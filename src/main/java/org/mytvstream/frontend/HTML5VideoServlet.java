@@ -61,21 +61,40 @@ public class HTML5VideoServlet extends HttpServlet {
 								
 				//PrintWriter writer = response.getWriter();
 				
-				 
+				logger.debug("HTML5video starting for port:" + port); 
 				
-				final Socket socket = new Socket("localhost", port);
+				
+				Socket socket = null;
+				
+				for (int i = 0; i < 10 ; i++) {
+					try {
+						socket = new Socket("localhost", port);
+						break;
+					}
+					catch(IOException e) {
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+					
+				}
+					
+					
 				
 			    final BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
 			    final BufferedOutputStream outStream = new BufferedOutputStream(response.getOutputStream());
-			    final byte[] buffer = new byte[4096];
-			    for (int read = inStream.read(buffer); read >= 0; read = inStream.read(buffer))
+			    final byte[] buffer = new byte[16];
+			    for (int read = inStream.read(buffer); read >= 0; read = inStream.read(buffer)) {
 			        outStream.write(buffer, 0, read);
+			        outStream.flush();
+			    }
 			    
 			    
 			    inStream.close();
-			    outStream.close();
-			   
-			    logger.debug("video done");
+			    outStream.close();			  			  
 			    	            
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

@@ -127,13 +127,12 @@
           bouquet = obj.bouquet;
           backend = obj.backend;
           var port = obj.port;
-          var rnd = obj.rnd;
           
           $("#flashcontent").empty();
           
           $("#flashcontent").append(            
             '<video height="100%" width="100%" controls="controls" preload="none" autoplay="true">  ' + 
-             '<source src="http://192.168.0.35:8085/html5video?port=' + port + '&rnd=' + rnd + '" type="video/webm" > ' +
+             '<source src="http://<c:out value="${server_name}"/>:8085/html5video?port=' + port + '" type="video/webm" > ' +
             '</video> '
            );
             

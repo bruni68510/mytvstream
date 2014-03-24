@@ -2,6 +2,9 @@ package org.mytvstream.frontend.flashwebsocket;
 
 import java.io.IOException;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.json.simple.JSONObject;
 import org.mytvstream.backend.Backend;
 import org.mytvstream.backend.BackendException;
@@ -15,6 +18,7 @@ import org.mytvstream.converter.ConverterFactory;
 import org.mytvstream.converter.ConverterFormatEnum;
 import org.mytvstream.converter.WebMConverter;
 import org.mytvstream.converter.XugglerConverter;
+import org.mytvstream.converter.XugglerConverter2;
 import org.mytvstream.main.Main;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -44,7 +48,7 @@ public class StartChannelMessageHandler extends MessageHandler {
 			String rtmp_url = (String)object.get("rtmpurl");
 			String rtmp_stream = (String)object.get("rtmpstream");
 
-			long port = ((int)Math.random() * 10000) + 1024; 
+			long port = ((int)(Math.random() * 10000)) + 1024; 
 			
 			Backend backend = Main.getInstance().getBackend().get((int)backendNr);
 			
@@ -118,41 +122,51 @@ public class StartChannelMessageHandler extends MessageHandler {
 				
 				else if (format.equals("WEBM")){
 					
-					logger.debug("opening webm converter");
+					logger.debug("opening webm converter on port:" +port);
 					
-					converter = new WebMConverter();
+					final XugglerConverter2 converter2 = new XugglerConverter2(); 
 					
-					converter.openMedia(inputUrl, backend.getDefaultFormat());
+					String[] args = {
+					          inputUrl,
+					          "-acodec", "libvorbis",
+					          "-asamplerate", "44100",
+					          "-abitrate", "48000",
+					          "-vcodec", "libvpx",
+					          "-vbitrate", "1024000",
+					          "-containerformat", "webm",
+					          "tcp://localhost:" + port + "?listen=1"
+					};
 					
-					JSONObject obj = new JSONObject();
-					obj.put("action", "CHANNELSTARTED");
-					obj.put("backend", new Long(backendNr));
-					obj.put("bouquet", new Long(bouquetNr));
-					obj.put("channel", new Long(channelNr));
-					obj.put("port", port);
-					obj.put("rnd", new Long((int)(Math.random() * 10000)));
-					sendMessage(obj);
-					
-					converter.openOutput("tcp://localhost:" + port + "?listen=1&listen_timeout=10000", ConverterFormatEnum.valueOf(format));
-					
-					logger.debug("Done opening output");
-					
-					converter.setupReadStreams("");
-					
-					ConverterCodecEnum audiocodec = ConverterCodecEnum.VORBIS;
-					ConverterCodecEnum videocodec = ConverterCodecEnum.VP8;
-					
-					converter.setupWriteStreams(videocodec, 
-						configuration.getClient().getVideobitrate().intValue(), 
-						audiocodec, 
-						configuration.getClient().getAudiobitrate().intValue()
-					);
-					
-					converter.start();
-					
-					logger.debug("Converter started");
-					
-					return true;
+					Options options = converter2.defineOptions();
+				      // And then parse them.
+				    final CommandLine cmdLine;
+					try {
+						cmdLine = converter2.parseOptions(options, args);
+						
+						Thread t = new Thread(){
+							@Override
+							public void run() {
+								try {
+									converter2.run(cmdLine);
+								}
+								catch(Exception e) {
+									e.printStackTrace();
+								}
+							}
+						};
+						
+						t.start();
+						
+						Thread.sleep(2000);
+												
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						logger.error("Exception in converter:" + e.getMessage());
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				    
 					
 				}
 				
@@ -179,6 +193,7 @@ public class StartChannelMessageHandler extends MessageHandler {
 			obj.put("channel", new Long(channelNr));
 			obj.put("stream", rtmp_url);
 			obj.put("streamname", rtmp_stream);
+			obj.put("port", port);
 			sendMessage(obj);
 			
 			return true;

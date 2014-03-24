@@ -1,6 +1,6 @@
 <configuration>
   <!-- client configuration may be either flash/rtmp or html/empty -->
-  <client type="flash" producerserver="rtmp" audiocodec="mp3" audiobitrate="128000" videocodec="flv" videobitrate="512000"/>            
+  <client type="flash" producerserver="rtmp" audiocodec="mp3" audiobitrate="128000" videocodec="flv" videobitrate="1024000"/>            
   
   <!--  backend configurations multiple -->
   <backends>
