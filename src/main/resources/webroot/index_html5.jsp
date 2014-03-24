@@ -8,7 +8,7 @@
 <!DOCTYPE html>
 <html> 
   <head>
-    <title>Hello World JSP Page.</title>
+    <title>HTML5 streaming page</title>
      <meta charset="utf-8">
      
     <link rel="stylesheet" href="/jstree/default/style.min.css" />
@@ -132,7 +132,7 @@
           
           $("#flashcontent").append(            
             '<video height="100%" width="100%" controls="controls" preload="none" autoplay="true">  ' + 
-             '<source src="http://<c:out value="${server_name}"/>:8085/html5video?port=' + port + '" type="video/webm" > ' +
+             '<source src="http://<c:out value="${server_name}"/>:8085/html5video?port=' + port + '" type="video/ogg" > ' +
             '</video> '
            );
             
@@ -159,7 +159,7 @@
         
           var myObj = {
             action: "CHANNELSTART", 
-            format : "WEBM",
+            format : "OGG",
             backend : data.node.data.backend,
             bouquet : data.node.data.bouquet,
             channel : data.node.data.channel,
@@ -183,7 +183,7 @@
   
     
     <div class="page-header well" id="header">
-      <center><h1>TVStream flash page</h1></center>
+      <center><h1>TVStream html5 page</h1></center>
     </div>
     
     <div class="container-fluid" id="content">

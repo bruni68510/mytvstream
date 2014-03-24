@@ -16,6 +16,7 @@ import org.mytvstream.converter.ConverterCodecEnum;
 import org.mytvstream.converter.ConverterException;
 import org.mytvstream.converter.ConverterFactory;
 import org.mytvstream.converter.ConverterFormatEnum;
+import org.mytvstream.converter.TheoraConverter;
 import org.mytvstream.converter.WebMConverter;
 import org.mytvstream.converter.XugglerConverter;
 import org.mytvstream.converter.XugglerConverter2;
@@ -120,53 +121,42 @@ public class StartChannelMessageHandler extends MessageHandler {
 					converter.start();
 				}	
 				
-				else if (format.equals("WEBM")){
+				else if (format.equals("OGG")){
 					
-					logger.debug("opening webm converter on port:" +port);
+					logger.debug("opening OGG converter on port:" +port);
 					
-					final XugglerConverter2 converter2 = new XugglerConverter2(); 
+					converter = new TheoraConverter();
 					
-					String[] args = {
-					          inputUrl,
-					          "-acodec", "libvorbis",
-					          "-asamplerate", "44100",
-					          "-abitrate", "48000",
-					          "-vcodec", "libvpx",
-					          "-vbitrate", "1024000",
-					          "-containerformat", "webm",
-					          "tcp://localhost:" + port + "?listen=1"
-					};
+					converter.openMedia(inputUrl, backend.getDefaultFormat());
+				
+					outputUrl = "tcp://localhost:" + port + "?listen=1";
 					
-					Options options = converter2.defineOptions();
-				      // And then parse them.
-				    final CommandLine cmdLine;
-					try {
-						cmdLine = converter2.parseOptions(options, args);
-						
-						Thread t = new Thread(){
-							@Override
-							public void run() {
-								try {
-									converter2.run(cmdLine);
-								}
-								catch(Exception e) {
-									e.printStackTrace();
-								}
-							}
-						};
-						
-						t.start();
-						
-						Thread.sleep(2000);
-												
-					} catch (ParseException e) {
-						// TODO Auto-generated catch block
-						logger.error("Exception in converter:" + e.getMessage());
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				    
+					JSONObject obj = new JSONObject();
+					obj.put("action", "CHANNELSTARTED");
+					obj.put("backend", new Long(backendNr));
+					obj.put("bouquet", new Long(bouquetNr));
+					obj.put("channel", new Long(channelNr));
+					obj.put("port", port);
+					sendMessage(obj);
+					
+					converter.openOutput(outputUrl, ConverterFormatEnum.valueOf(format));
+				
+					converter.setupReadStreams("fre");					
+				
+					ConverterCodecEnum audiocodec = ConverterCodecEnum.THEORA;
+					ConverterCodecEnum videocodec = ConverterCodecEnum.VORBIS;
+					
+				
+					converter.setupWriteStreams(
+						videocodec, 
+						configuration.getClient().getVideobitrate().intValue(), 
+						audiocodec, 
+						configuration.getClient().getAudiobitrate().intValue()
+					);
+					
+					converter.start();
+					
+					return true;
 					
 				}
 				
@@ -203,6 +193,7 @@ public class StartChannelMessageHandler extends MessageHandler {
 		
 	}
 	
+		
 	private void sendChannelFailedMessage(String error) { 			
 		JSONObject obj = new JSONObject();
 		obj.put("action", "CHANNELFAILED");
