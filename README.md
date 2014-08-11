@@ -45,7 +45,7 @@ An HTML5 client is available but the real time encoding of the video to theora o
 
 The backends section let you define the backend that are present on your local network, you can see an sample of a htsp/tv headend backend and an eye tv backend.
 
-Compilation and Execution
+Compile, Execute and Play
 ==========================
 
 These tasks are done invoking maven on the top of the project.
@@ -62,6 +62,19 @@ Execution:
 ````shell
   mvn exec:java -Dexec.args="configuration.xml"
 ```
+
+Playing
+--------
+
+From the machine running the server:
+http://localhost:8085/
+
+From everywhere on your local network:
+http://<ip_of_the_server>:8085
+
+From the internet:
+Your need to forward the port 8085 from your router to the server.
+http://<ip_for_your_home>:8085
 
 Background
 ==========
