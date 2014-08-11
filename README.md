@@ -45,8 +45,10 @@ An HTML5 client is available but the real time encoding of the video to theora o
 
 The backends section let you define the backend that are present on your local network, you can see an sample of a htsp/tv headend backend and an eye tv backend.
 
-Compiling and running
-=====================
+Compilation and Execution
+==========================
+
+These tasks are done invoking maven on the top of the project.
 
 Compilation:
 -------------
@@ -55,7 +57,7 @@ Compilation:
   mvn compile
 ```
   
-Execution
+Execution:
 ----------
 ````shell
   mvn exec:java -Dexec.args="configuration.xml"
