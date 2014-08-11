@@ -38,8 +38,8 @@ You may also need to adapt the configuration:
 
 ```
 
-The client part of the defines the rendering client, it may be either flash/rtmp other html. 
-The flash client can produce the video either with the flv codec or the h264 codec, you may adjust the videocodec parameter.
+The client part defines the rendering part, it may be either flash/rtmp or html. 
+The flash client can produce the video either using the flv codec or the h264 codec, you may adjust the videocodec parameter.
 
 An HTML5 client is available but the real time encoding of the video to theora or webm need huge resource.
 
@@ -65,10 +65,9 @@ Background
 ==========
 
 This project aggregates following components
-* flazr (modded version) : provides rtmp steaming
+* flazr (modded version) : provides rtmp streaming
 * xuggler 5.4 : provides audio/video transcoding
-* jetty(in a embedded fashion): provides the web server running jsp and servlet.
+* jetty(embedded): provides the web server running jsp and servlet.
 * bootstrap : provides the frontend.
-* jstree : provides the treeview for the channels.
+* jstree : provides the treeview for the channels in the frontend
 
-  
