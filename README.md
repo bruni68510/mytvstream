@@ -67,14 +67,14 @@ Playing
 --------
 
 From the machine running the server:
-http://localhost:8085/
+[http://localhost:8085/]()
 
 From everywhere on your local network:
-http://<ip_of_the_server>:8085
+http://"ip_of_the_server":8085/
 
 From the internet:
 Your need to forward the port 8085 from your router to the server.
-http://<ip_for_your_home>:8085
+http://"ip_of_your_home":8085/
 
 Background
 ==========
