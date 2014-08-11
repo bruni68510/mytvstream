@@ -64,7 +64,7 @@ public class Main {
 	 * Internal variables of embedded jetty server
 	 */
 	private static final int serverPort = 8085;
-    private static final String WEBROOT_INDEX = "/webroot/";
+	private static final String WEBROOT_INDEX = "/webroot/";
 	private Server server;
 	private URI serverURI;
 	
@@ -163,7 +163,7 @@ public class Main {
             throw new FileNotFoundException("Unable to find resource " + WEBROOT_INDEX);
         }
         
-     // Points to wherever /webroot/ (the resource) is
+        // Points to wherever /webroot/ (the resource) is
         URI baseUri = indexUri.toURI();
 
         // Establish Scratch directory for the servlet context (used by JSP compilation)
