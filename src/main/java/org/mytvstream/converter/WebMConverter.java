@@ -1148,39 +1148,5 @@ public class WebMConverter extends Converter {
 			return "matroska";
 		return "";
 	}
-	
-	/**
-	 * 
-	 * A simple test of xuggler, this program takes an input file, and outputs it
-	 * as an output file.
-	 * 
-	 * @param args
-	 *          The command line args passed to this program.
-	 */
-
-	public static void main(String[] args)
-	{
-		WebMConverter converter = new WebMConverter();
-
-		try
-		{
-			int i = 0;
-						
-			System.out.println("Opening media");
-			converter.openMedia("http://cbrunner:zause1gt@192.168.0.34:9981/stream/service/_dev_dvb_adapter0_Zarlink_ZL10353_DVB_T570000000_0203", ConverterFormatEnum.MKV);
-			System.out.println("Opening output");
-			converter.openOutput("tcp://localhost:5555?listen=1", ConverterFormatEnum.WEBM);
-			
-			converter.setupReadStreams("");
-			System.out.println("setup write stream");
-			converter.setupWriteStreams(ConverterCodecEnum.VP8, 512000, ConverterCodecEnum.VORBIS, 48000);
-			System.out.println("starting stuff");
-			converter.start();
-		}
-		catch (Exception exception)
-		{
-			System.err.printf("Error: %s\n", exception.getMessage());
-		}
-	}
 
 }
